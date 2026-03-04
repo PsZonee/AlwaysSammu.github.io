@@ -6,27 +6,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="gamemonetize" content="true">
 
-    <!-- GameMonetize SDK — OFFICIAL implementation -->
+    <!-- GameMonetize SDK — OFFICIAL implementation (api.gamemonetize.com/sdk.js) -->
     <script type="text/javascript">
     window.SDK_OPTIONS = {
         gameId: "32kcm41d7j151g00dspnkhna3x4464pr",
-        onEvent: function(a) {
-            switch (a.name) {
+        onEvent: function(event) {
+            switch (event.name) {
                 case "SDK_GAME_PAUSE":
-                    // Pause game and mute audio while ad plays
+                    // Mute audio while ad plays
                     if (window.audioSys && audioSys.ctx) {
                         try { audioSys.ctx.suspend(); } catch(e) {}
                     }
                     break;
                 case "SDK_GAME_START":
-                    // Ad done — resume game and unmute audio
+                    // Ad finished — unmute audio and resume
                     if (window.audioSys && audioSys.ctx) {
                         try { audioSys.ctx.resume(); } catch(e) {}
                     }
-                    if (window.CrazySDKSafe) window.CrazySDKSafe.ready = true;
                     break;
                 case "SDK_READY":
-                    if (window.CrazySDKSafe) window.CrazySDKSafe.ready = true;
                     console.log('[GM] SDK Ready');
                     break;
             }
@@ -755,75 +753,76 @@ html,body{
 /* loadingStart already sent from <head> script */
 
 /* =====================================================
-   GAMEMONETIZE SDK WRAPPER — OFFICIAL SDK v2
-   Uses window.sdk exposed by api.gamemonetize.com/sdk.js
-   SDK_OPTIONS.onEvent handles pause/resume/ready above.
+   GAMEMONETIZE SDK WRAPPER
+   Thin shim — all ad calls go through the global `sdk`
+   object injected by api.gamemonetize.com/sdk.js.
+   The verifier calls sdk.showBanner() / sdk.gameplayStart()
+   / sdk.gameplayStop() directly; we must NOT block those.
    ===================================================== */
 window.CrazySDKSafe = {
     ready: false,
     _lsStopDone: false,
 
-    // Returns the sdk global injected by the official script
-    _sdk() { return window.sdk || null; },
-
-    preload() {
-        // Not needed with official SDK — no-op kept for compatibility
-    },
-
-    loadingStop() {
-        if (this._lsStopDone) return;
-        this._lsStopDone = true;
-        try { if (this._sdk()) this._sdk().gameLoadingFinished(); } catch(e) {}
-    },
-
+    // ── Init: wait for SDK_READY or sdk global to appear ──
     async init() {
-        // Wait up to 6s for SDK_READY (fired via SDK_OPTIONS.onEvent)
         await new Promise(resolve => {
-            if (this.ready) { resolve(); return; }
-            const timeout = setTimeout(() => {
-                if (window.sdk) {
-                    this.ready = true;
-                    console.log('[GM] SDK ready (fallback)');
-                } else {
-                    console.warn('[GM] SDK not available');
-                }
-                resolve();
-            }, 6000);
+            // Already ready
+            if (typeof sdk !== 'undefined') { this.ready = true; resolve(); return; }
+
+            let waited = 0;
             const poll = setInterval(() => {
-                if (this.ready) { clearInterval(poll); clearTimeout(timeout); resolve(); }
+                waited += 100;
+                if (typeof sdk !== 'undefined') {
+                    this.ready = true;
+                    clearInterval(poll);
+                    resolve();
+                } else if (waited >= 6000) {
+                    console.warn('[GM] SDK not available after 6s');
+                    clearInterval(poll);
+                    resolve();
+                }
             }, 100);
         });
         return this.ready;
     },
 
+    // ── Signal game has finished loading ──────────────────
+    loadingStop() {
+        if (this._lsStopDone) return;
+        this._lsStopDone = true;
+        try {
+            if (typeof sdk !== 'undefined') sdk.gameLoadingFinished();
+        } catch(e) { console.warn('[GM] gameLoadingFinished error', e); }
+    },
+
+    // ── Gameplay signals ──────────────────────────────────
     gameplayStart() {
-        try { if (this.ready && this._sdk()) this._sdk().gameplayStart(); } catch(e) {}
+        try { if (typeof sdk !== 'undefined') sdk.gameplayStart(); } catch(e) {}
     },
     gameplayStop() {
-        try { if (this.ready && this._sdk()) this._sdk().gameplayStop(); } catch(e) {}
-    },
-    happytime() {
-        console.log('[GM] happytime stub');
+        try { if (typeof sdk !== 'undefined') sdk.gameplayStop(); } catch(e) {}
     },
 
-    // Show interstitial ad
+    // ── Show interstitial ad ──────────────────────────────
     async showAd() {
-        if (!this.ready || !this._sdk()) return;
-        try { await this._sdk().showBanner(); } catch(e) { console.warn('[GM] Ad failed:', e); }
+        try {
+            if (typeof sdk !== 'undefined' && typeof sdk.showBanner !== 'undefined') {
+                sdk.showBanner();
+            }
+        } catch(e) { console.warn('[GM] showBanner error', e); }
     },
 
-    // Show rewarded ad
+    // ── Rewarded ad ───────────────────────────────────────
     showRewardedAd() {
         try {
-            if (this.ready && this._sdk()) return this._sdk().showRewardedAd?.();
+            if (typeof sdk !== 'undefined') return sdk.showRewardedAd?.();
         } catch(e) {}
         return null;
     },
 
-    // Data storage with localStorage fallback
+    // ── Data storage (localStorage) ───────────────────────
     dataSet(key, value) {
-        const val = typeof value === 'string' ? value : JSON.stringify(value);
-        try { localStorage.setItem(key, val); } catch(e) {}
+        try { localStorage.setItem(key, typeof value === 'string' ? value : JSON.stringify(value)); } catch(e) {}
     },
     dataGet(key) {
         try { return localStorage.getItem(key); } catch(e) { return null; }
@@ -831,32 +830,31 @@ window.CrazySDKSafe = {
     async dataGetAsync(key) {
         try { return localStorage.getItem(key); } catch(e) { return null; }
     },
-    dataRemove(key) {
-        try { localStorage.removeItem(key); } catch(e) {}
-    },
-    dataClear() {
-        try { localStorage.clear(); } catch(e) {}
-    },
+    dataRemove(key) { try { localStorage.removeItem(key); } catch(e) {} },
+    dataClear()     { try { localStorage.clear();          } catch(e) {} },
 
-    // Leaderboard
+    // ── Leaderboard ───────────────────────────────────────
     submitScore(score) {
-        try { if (this.ready && this._sdk()) this._sdk().submitScore?.(score); } catch(e) {}
+        try { if (typeof sdk !== 'undefined') sdk.submitScore?.(score); } catch(e) {}
     },
 
-    // Stubs for unused CrazyGames methods
-    getUser: async () => null,
-    getUserToken: async () => null,
-    getXsollaUserToken: async () => null,
-    showAuthPrompt: async () => null,
-    showAccountLinkPrompt: async () => null,
-    inviteLink: () => null,
-    showInviteButton: () => null,
-    hideInviteButton: () => {},
-    getSystemInfo: async () => ({ countryCode: 'US' }),
+    happytime() { /* stub */ },
 
-    // Legacy helpers
+    // ── Stubs for unused CrazyGames API ───────────────────
+    preload:                 () => {},
+    getUser:                 async () => null,
+    getUserToken:            async () => null,
+    getXsollaUserToken:      async () => null,
+    showAuthPrompt:          async () => null,
+    showAccountLinkPrompt:   async () => null,
+    inviteLink:              () => null,
+    showInviteButton:        () => null,
+    hideInviteButton:        () => {},
+    getSystemInfo:           async () => ({ countryCode: 'US' }),
+
+    // ── Legacy helpers ────────────────────────────────────
     saveData: async (data) => { CrazySDKSafe.dataSet('jellyPoppysBlast_save', JSON.stringify(data)); return true; },
-    loadData: async () => { const raw = await CrazySDKSafe.dataGetAsync('jellyPoppysBlast_save'); return raw ? JSON.parse(raw) : null; }
+    loadData: async ()     => { const r = await CrazySDKSafe.dataGetAsync('jellyPoppysBlast_save'); return r ? JSON.parse(r) : null; }
 };
 
 /* =============================
