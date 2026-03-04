@@ -2568,26 +2568,65 @@ const game = {
                 const resMascot = document.getElementById('res-mascot');
                 if (resMascot) resMascot.textContent = '😢';
                 
-                // "Watch ad for extra moves" — rewarded ad pattern (GameMonetize supports rewarded)
-                if (CrazySDKSafe.ready) {
-                    const btnContinue = document.createElement('button');
-                    btnContinue.className = 'btn';
-                    btnContinue.innerHTML = '📺 +5 Moves (Watch Ad)';
-                    btnContinue.style.fontSize = '1rem';
-                    btnContinue.onclick = async () => {
-                        try {
-                            await CrazySDKSafe.showRewardedAd(); // use rewarded ad
-                            // Grant extra moves and continue
-                            state.moves = 5;
-                            state.locked = false;
-                            ui.nav('screen-game');
-                            ui.updateStats();
-                        } catch(e) {
-                            market.showMsg("Ad not available", "#e53935");
+                // "Watch ad for extra moves" button — always shown on fail screen
+                const btnContinue = document.createElement('button');
+                btnContinue.className = 'btn';
+                btnContinue.innerHTML = '📺 Watch Ad for +5 Moves';
+                btnContinue.style.cssText = 'font-size:1rem; background:linear-gradient(180deg,#43e97b,#38f9d7); color:#1a5c36; box-shadow:0 5px 0 #1a7a40;';
+                btnContinue.onclick = async () => {
+                    btnContinue.disabled = true;
+                    btnContinue.innerHTML = '⏳ Loading Ad...';
+
+                    // Listen for SDK_GAME_START (ad finished) then grant moves
+                    const originalOnEvent = window.SDK_OPTIONS && window.SDK_OPTIONS.onEvent;
+                    let adGranted = false;
+
+                    function grantMoves() {
+                        if (adGranted) return;
+                        adGranted = true;
+                        // Restore onEvent handler
+                        if (window.SDK_OPTIONS) window.SDK_OPTIONS.onEvent = originalOnEvent;
+                        // Give 5 extra moves and resume game
+                        state.moves = 5;
+                        state.locked = false;
+                        audioSys.start();
+                        ui.nav('screen-game');
+                        ui.updateStats();
+                    }
+
+                    // Override onEvent temporarily to catch ad completion
+                    if (window.SDK_OPTIONS) {
+                        window.SDK_OPTIONS.onEvent = function(event) {
+                            // Still handle pause/mute
+                            if (originalOnEvent) originalOnEvent(event);
+                            if (event.name === 'SDK_GAME_START') {
+                                grantMoves();
+                            }
+                        };
+                    }
+
+                    // Show the ad
+                    try {
+                        if (typeof sdk !== 'undefined' && typeof sdk.showBanner !== 'undefined') {
+                            sdk.showBanner();
+                            // Fallback: if SDK_GAME_START never fires within 15s, still grant moves
+                            setTimeout(() => {
+                                if (!adGranted) {
+                                    console.warn('[GM] Ad completion event not received — granting moves anyway');
+                                    grantMoves();
+                                }
+                            }, 15000);
+                        } else {
+                            // SDK not available — grant moves anyway so player isn't stuck
+                            console.warn('[GM] SDK unavailable, granting moves as fallback');
+                            grantMoves();
                         }
-                    };
-                    btnContainer.appendChild(btnContinue);
-                }
+                    } catch(e) {
+                        console.warn('[GM] Ad error:', e);
+                        grantMoves();
+                    }
+                };
+                btnContainer.appendChild(btnContinue);
                 
                 const btnRetry = document.createElement('button');
                 btnRetry.className = 'btn';
