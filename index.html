@@ -38,6 +38,7 @@ body{background:#000;overflow:hidden;user-select:none;font-family:'Press Start 2
 #xhair::before{width:2px;height:16px;left:7px;top:0;}
 #xhair::after{height:2px;width:16px;top:7px;left:0;}
 #info{position:absolute;top:10px;left:12px;color:#fff;font-size:10px;line-height:2.2;text-shadow: 2px 2px 0 #3f3f3f;}
+#timeUI{position:absolute;top:10px;right:12px;color:#fff;font-size:12px;text-shadow: 2px 2px 0 #000; background:rgba(0,0,0,0.4); padding: 8px; border: 2px solid #555;}
 #stats-container {position: absolute; bottom: 60px; left: 50%; transform: translateX(-50%);display: flex; flex-direction: column; align-items: center; gap: 8px;}
 #hearts { display: flex; gap: 2px; }
 .heart { width: 14px; height: 14px; background: #d00; clip-path: polygon(50% 20%, 80% 0, 100% 30%, 50% 100%, 0 30%, 20% 0);border: 1px solid #000; box-shadow: 1px 1px 0 #000;}
@@ -60,14 +61,14 @@ body{background:#000;overflow:hidden;user-select:none;font-family:'Press Start 2
 #breakBar { width: 0%; height: 100%; background: #60ff60; }
 #damageOverlay {position: fixed; inset: 0; background: red; opacity: 0;pointer-events: none; transition: opacity 0.2s;}
 
-/* ── INVENTORY & CRAFTING UI ── */
-#invScreen{
-  position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:200;display:none;
+/* ── UI SCREENS ── */
+.screen-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:200;display:none;
   align-items:center;justify-content:center;pointer-events:auto;
 }
-.inv-panel{
+.panel{
   background:#c6c6c6;border:4px solid #000;padding:16px;
-  display:flex;flex-direction:column;gap:16px;
+  display:flex;flex-direction:column;gap:16px; max-height: 90vh; overflow-y: auto;
   box-shadow: inset -4px -4px 0px rgba(0,0,0,0.25), inset 4px 4px 0px rgba(255,255,255,0.8);
 }
 .craft-area { display:flex; align-items:center; gap: 24px; margin-bottom: 8px;}
@@ -80,6 +81,13 @@ body{background:#000;overflow:hidden;user-select:none;font-family:'Press Start 2
 #cursorItem canvas { image-rendering:pixelated; width:28px; height:28px; filter: drop-shadow(2px 2px 0px rgba(0,0,0,0.5));}
 #cursorItem .slot-count {position: absolute; bottom: 2px; right: 4px;color: white; font-size: 10px; text-shadow: 2px 2px 0 #000;}
 .ui-label { font-size: 10px; color: #333; margin-bottom: 4px;}
+
+/* ── RECIPE BOOK ── */
+.recipe-row { display: flex; align-items: center; gap: 16px; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 2px dashed #999; }
+.recipe-mini-grid { display: grid; grid-template-columns: repeat(3, 20px); gap: 2px; background: rgba(0,0,0,0.1); padding: 4px; border: 2px solid #777;}
+.mini-slot { width: 20px; height: 20px; background: #8b8b8b; border: 1px solid #555; }
+.mini-slot canvas { width: 100%; height: 100%; image-rendering: pixelated; }
+.recipe-name { font-size: 10px; color: #222; width: 150px; }
 </style>
 </head>
 <body>
@@ -91,8 +99,8 @@ body{background:#000;overflow:hidden;user-select:none;font-family:'Press Start 2
   <p>Survival, Crafting & Exploration</p>
   <button id="playBtn">Start Game</button>
   <div class="controls-hint">
-    LEFT CLICK · MINE BLOCK / ATTACK &nbsp;|&nbsp; RIGHT CLICK · PLACE BLOCK / INTERACT<br>
-    MOUSE · LOOK AROUND &nbsp;|&nbsp; WASD · MOVE &nbsp;|&nbsp; SPACE · JUMP &nbsp;|&nbsp; E · INVENTORY
+    L-CLICK: Mine/Attack &nbsp;|&nbsp; R-CLICK: Place/Interact &nbsp;|&nbsp; WASD: Move &nbsp;|&nbsp; SPACE: Jump<br><br>
+    E: Inventory/Crafting &nbsp;|&nbsp; R: Recipe Book &nbsp;|&nbsp; SCROLL: Hotbar
   </div>
 </div>
 
@@ -104,17 +112,18 @@ body{background:#000;overflow:hidden;user-select:none;font-family:'Press Start 2
     <div id="pos">XYZ: -- -- --</div>
     <div id="look">Target: air</div>
   </div>
+  <div id="timeUI">Day</div>
   <div id="breakBarContainer"><div id="breakBar"></div></div>
   <div id="stats-container">
     <div id="hearts"></div>
     <div id="hotbar"></div>
   </div>
   <div id="blockname"></div>
-  <div id="tips">Press E to open Inventory · Craft tools to mine Stone/Coal</div>
+  <div id="tips">Press E for Inventory · Press R for Recipes</div>
 </div>
 
-<div id="invScreen">
-  <div class="inv-panel" oncontextmenu="return false;">
+<div id="invScreen" class="screen-overlay">
+  <div class="panel" oncontextmenu="return false;">
     <div class="ui-label" id="craftLabel">Crafting</div>
     <div class="craft-area">
       <div id="craftGridUI" class="craft-grid"></div>
@@ -126,6 +135,14 @@ body{background:#000;overflow:hidden;user-select:none;font-family:'Press Start 2
     <div id="hotbarInvUI" class="hotbar-grid"></div>
   </div>
 </div>
+
+<div id="recipeScreen" class="screen-overlay">
+  <div class="panel" id="recipePanel" oncontextmenu="return false;" style="width: 500px;">
+    <div class="ui-label" style="text-align: center; font-size: 14px; margin-bottom: 16px;">Recipe Book</div>
+    <div id="recipeList"></div>
+  </div>
+</div>
+
 <div id="cursorItem"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -134,22 +151,41 @@ body{background:#000;overflow:hidden;user-select:none;font-family:'Press Start 2
 /* ══════════════════════════════════════════════════════════
    CONSTANTS & BLOCK IDs
 ══════════════════════════════════════════════════════════ */
-const AIR=0,GRASS=1,DIRT=2,STONE=3,WOOD=4,LEAVES=5,SAND=6,WATER=7,SNOW=8,GRAVEL=9,COAL=10,
-      PLANKS=11, CRAFT_TABLE=12;
-// ITEMS
+const AIR=0,GRASS=1,DIRT=2,STONE=3,WOOD=4,LEAVES=5,SAND=6,WATER=7,SNOW=8,GRAVEL=9,COAL_ORE=10,
+      PLANKS=11, CRAFT_TABLE=12, COBBLESTONE=13, IRON_ORE=14, GOLD_ORE=15, GLASS=16, BRICKS=17,
+      OBSIDIAN=18, BOOKSHELF=19, SPONGE=20, TORCH=21, LADDER=22, FENCE=23, DOOR=24, TRAPDOOR=25;
+
+// ITEMS (101+)
 const STICK=101, W_PICKAXE=102, S_PICKAXE=103, W_AXE=104, S_AXE=105, 
-      W_SHOVEL=106, S_SHOVEL=107, W_SWORD=108, S_SWORD=109;
+      W_SHOVEL=106, S_SHOVEL=107, W_SWORD=108, S_SWORD=109,
+      COAL=110, IRON_INGOT=111, GOLD_INGOT=112,
+      I_PICKAXE=113, I_AXE=114, I_SHOVEL=115, I_SWORD=116,
+      I_HOE=117, W_HOE=118, S_HOE=119,
+      I_HELMET=120, I_CHEST=121, I_LEGS=122, I_BOOTS=123,
+      BUCKET=124, SHEARS=125, BOW=126, ARROW=127,
+      COMPASS=128, CLOCK=129;
 
 const BNAMES={
-  0:'Air', 1:'Grass Block', 2:'Dirt', 3:'Cobblestone', 4:'Oak Log', 5:'Oak Leaves', 6:'Sand', 
+  0:'Air', 1:'Grass Block', 2:'Dirt', 3:'Stone', 4:'Oak Log', 5:'Oak Leaves', 6:'Sand', 
   7:'Water', 8:'Snow Block', 9:'Gravel', 10:'Coal Ore', 11:'Oak Planks', 12:'Crafting Table',
+  13:'Cobblestone', 14:'Iron Ore', 15:'Gold Ore', 16:'Glass', 17:'Bricks', 18:'Obsidian', 19:'Bookshelf', 20:'Sponge', 21:'Torch',
+  22:'Ladder', 23:'Fence', 24:'Door', 25:'Trapdoor',
   101:'Stick', 102:'Wooden Pickaxe', 103:'Stone Pickaxe', 104:'Wooden Axe', 105:'Stone Axe', 
-  106:'Wooden Shovel', 107:'Stone Shovel', 108:'Wooden Sword', 109:'Stone Sword'
+  106:'Wooden Shovel', 107:'Stone Shovel', 108:'Wooden Sword', 109:'Stone Sword',
+  110:'Coal', 111:'Iron Ingot', 112:'Gold Ingot',
+  113:'Iron Pickaxe', 114:'Iron Axe', 115:'Iron Shovel', 116:'Iron Sword',
+  117:'Iron Hoe', 118:'Wooden Hoe', 119:'Stone Hoe',
+  120:'Iron Helmet', 121:'Iron Chestplate', 122:'Iron Leggings', 123:'Iron Boots',
+  124:'Bucket', 125:'Shears', 126:'Bow', 127:'Arrow', 128:'Compass', 129:'Clock'
 };
 const SEA=10, CH=64, CS=16;
 
-// Base block hardness
-const HARDNESS=[0, 0.6, 0.4, 1.5, 1.2, 0.2, 0.4, 0, 0.3, 0.5, 2.0, 1.0, 1.5];
+// Base block hardness (Obsidian takes forever, Stone vs Cobble, etc)
+const HARDNESS=[];
+for(let i=0; i<50; i++) HARDNESS[i] = 1.0;
+HARDNESS[STONE]=1.5; HARDNESS[COBBLESTONE]=2.0; HARDNESS[DIRT]=0.5; HARDNESS[GRASS]=0.6;
+HARDNESS[SAND]=0.5; HARDNESS[GRAVEL]=0.6; HARDNESS[WOOD]=2.0; HARDNESS[PLANKS]=2.0;
+HARDNESS[LEAVES]=0.2; HARDNESS[GLASS]=0.3; HARDNESS[OBSIDIAN]=50.0; HARDNESS[IRON_ORE]=3.0; HARDNESS[GOLD_ORE]=3.0;
 
 /* ══════════════════════════════════════════════════════════
    TEXTURE & ICON GENERATOR
@@ -169,7 +205,8 @@ function genGridTex(fn) {
 function getTexGrassTop() { return genGridTex((x, y) => { let v = 0.85 + Math.random() * 0.3; return {r: ~~(90*v), g: ~~(155*v), b: ~~(60*v)}; }); }
 function getTexDirt() { return genGridTex((x, y) => { let v = 0.85 + Math.random() * 0.3; if(Math.random()<0.05) return {r: ~~(90*v), g: ~~(65*v), b: ~~(40*v)}; return {r: ~~(124*v), g: ~~(86*v), b: ~~(57*v)}; }); }
 function getTexGrassSide() { const h = [4, 5, 4, 3, 3, 4, 5, 6, 5, 4, 4, 3, 4, 5, 5, 4]; return genGridTex((x, y) => { let v = 0.85 + Math.random() * 0.3; if (y < h[x]) return {r: ~~(90*v), g: ~~(155*v), b: ~~(60*v)}; if(Math.random()<0.05) return {r: ~~(90*v), g: ~~(65*v), b: ~~(40*v)}; return {r: ~~(124*v), g: ~~(86*v), b: ~~(57*v)}; }); }
-function getTexStone() { return genGridTex((x, y) => { let v = 0.8 + Math.random() * 0.4; if((x%4===0 && y%4===0) || Math.random()<0.1) v *= 0.6; return {r: ~~(115*v), g: ~~(115*v), b: ~~(115*v)}; }); }
+function getTexStone() { return genGridTex((x, y) => { let v = 0.9 + Math.random() * 0.2; return {r: ~~(130*v), g: ~~(130*v), b: ~~(130*v)}; }); }
+function getTexCobble() { return genGridTex((x, y) => { let v = 0.7 + Math.random() * 0.5; if((x%4===0 && y%4===0) || Math.random()<0.1) v *= 0.5; return {r: ~~(115*v), g: ~~(115*v), b: ~~(115*v)}; }); }
 function getTexWoodSide() { return genGridTex((x, y) => { let v = 0.85 + Math.random() * 0.3; let d = (x % 3 === 0 || x % 5 === 2) && Math.random() > 0.1; if(d) return {r: ~~(67*v), g: ~~(40*v), b: ~~(20*v)}; return {r: ~~(90*v), g: ~~(65*v), b: ~~(40*v)}; }); }
 function getTexWoodTop() { return genGridTex((x, y) => { let dx=x-7.5, dy=y-7.5, dist=Math.sqrt(dx*dx + dy*dy), v=0.9+Math.random()*0.2; if(Math.sin(dist * 1.5)>0.5) return {r: ~~(148*v), g: ~~(121*v), b: ~~(81*v)}; return {r: ~~(176*v), g: ~~(145*v), b: ~~(96*v)}; }); }
 function getTexLeaves() { return genGridTex((x, y) => { if(Math.random() < 0.2) return {a: 0}; let v = 0.8 + Math.random() * 0.4; return {r: ~~(48*v), g: ~~(120*v), b: ~~(34*v)}; }); }
@@ -177,10 +214,18 @@ function getTexSand() { return genGridTex((x, y) => { let v = 0.9 + Math.random(
 function getTexWater() { return genGridTex((x, y) => { let v = 0.95 + Math.random() * 0.1; if(y%4 === 0 && Math.random() > 0.5) v *= 1.1; return {r: ~~(43*v), g: ~~(75*v), b: ~~(200*v), a: 0.8}; }); }
 function getTexSnow() { return genGridTex((x, y) => { let v = 0.95 + Math.random() * 0.1; return {r: ~~(230*v), g: ~~(240*v), b: ~~(255*v)}; }); }
 function getTexGravel() { return genGridTex((x, y) => { let v = 0.7 + Math.random() * 0.6; if(Math.random() < 0.05) return {r: ~~(130*v), g: ~~(90*v), b: ~~(90*v)}; if(Math.random() < 0.05) return {r: ~~(70*v), g: ~~(70*v), b: ~~(70*v)}; return {r: ~~(118*v), g: ~~(112*v), b: ~~(108*v)}; }); }
-function getTexCoal() { return genGridTex((x, y) => { let v = 0.8 + Math.random() * 0.4; if(Math.random() < 0.15) return {r: ~~(20*v), g: ~~(20*v), b: ~~(20*v)}; if((x%4===0 && y%4===0)) v *= 0.6; return {r: ~~(115*v), g: ~~(115*v), b: ~~(115*v)}; }); }
+function getTexCoal() { return genGridTex((x, y) => { let v = 0.9 + Math.random() * 0.2; if(Math.random() < 0.15) return {r: ~~(30*v), g: ~~(30*v), b: ~~(30*v)}; return {r: ~~(130*v), g: ~~(130*v), b: ~~(130*v)}; }); }
+function getTexIronOre() { return genGridTex((x, y) => { let v = 0.9 + Math.random() * 0.2; if(Math.random() < 0.15) return {r: ~~(230*v), g: ~~(190*v), b: ~~(160*v)}; return {r: ~~(130*v), g: ~~(130*v), b: ~~(130*v)}; }); }
+function getTexGoldOre() { return genGridTex((x, y) => { let v = 0.9 + Math.random() * 0.2; if(Math.random() < 0.15) return {r: ~~(255*v), g: ~~(230*v), b: ~~(60*v)}; return {r: ~~(130*v), g: ~~(130*v), b: ~~(130*v)}; }); }
 function getTexPlanks() { return genGridTex((x, y) => { let v=0.85+Math.random()*0.15; if(y%4===0 || (x+Math.floor(y/4)*5)%16===0) v*=0.6; return {r:~~(176*v),g:~~(145*v),b:~~(96*v)}; }); }
 function getTexCraftSide() { return genGridTex((x, y) => { let v=0.85+Math.random()*0.15; if(y<4) return {r:~~(150*v),g:~~(90*v),b:~~(50*v)}; if(y%4===0 || (x+Math.floor(y/4)*5)%16===0) v*=0.6; return {r:~~(176*v),g:~~(145*v),b:~~(96*v)}; }); }
 function getTexCraftTop() { return genGridTex((x, y) => { let v=0.85+Math.random()*0.15; if(x===0||x===15||y===0||y===15||(x===7||x===8)&&(y===7||y===8)) v*=0.5; return {r:~~(150*v),g:~~(90*v),b:~~(50*v)}; }); }
+function getTexGlass() { return genGridTex((x,y) => { if(x===0||x===15||y===0||y===15) return {r:200,g:230,b:255,a:0.8}; if(x===3&&y===3) return {r:255,g:255,b:255,a:0.8}; return {r:200,g:230,b:255,a:0.2}; }); }
+function getTexBricks() { return genGridTex((x,y) => { if(y%4===0 || (y<4&&x%8===0) || (y>=4&&y<8&&(x+4)%8===0) || (y>=8&&y<12&&x%8===0) || (y>=12&&(x+4)%8===0)) return {r:200,g:200,b:200}; let v=0.8+Math.random()*0.4; return {r:~~(160*v),g:~~(60*v),b:~~(50*v)}; }); }
+function getTexObsidian() { return genGridTex((x,y) => { let v=0.5+Math.random()*0.5; if(Math.random()<0.2) return {r:~~(80*v),g:~~(20*v),b:~~(110*v)}; return {r:~~(30*v),g:~~(20*v),b:~~(40*v)}; }); }
+function getTexBookshelfSide() { return genGridTex((x,y) => { if(y<3 || y>12 || (y>6&&y<9)) return {r:120,g:90,b:50}; let c=[{r:200,g:50,b:50},{r:50,g:200,b:50},{r:50,g:50,b:200},{r:200,g:200,b:50}][Math.floor(x/4)]; let v=0.7+Math.random()*0.3; return {r:~~(c.r*v),g:~~(c.g*v),b:~~(c.b*v)}; }); }
+function getTexSponge() { return genGridTex((x,y) => { let v=0.8+Math.random()*0.3; if(Math.random()<0.1) return {r:~~(120*v),g:~~(120*v),b:~~(40*v)}; return {r:~~(220*v),g:~~(220*v),b:~~(80*v)}; }); }
+function getTexTorch() { return genGridTex((x,y) => { if(x<7||x>8||y<4) return {a:0}; if(y<7) return {r:255,g:200,b:50}; return {r:100,g:60,b:30}; }); }
 
 function getTexCrack(stage) {
   return genGridTex((x,y) => {
@@ -191,22 +236,59 @@ function getTexCrack(stage) {
 }
 
 function drawItemIcon(ctx, id) {
-  let isWood = [W_PICKAXE, W_AXE, W_SHOVEL, W_SWORD].includes(id);
-  let isStone = [S_PICKAXE, S_AXE, S_SHOVEL, S_SWORD].includes(id);
-  ctx.fillStyle = '#6e4a2c'; // stick color
-  if(id === STICK) { for(let i=8; i<24; i+=2) ctx.fillRect(i, 32-i, 4, 4); return; }
+  let isWood = [W_PICKAXE, W_AXE, W_SHOVEL, W_SWORD, W_HOE].includes(id);
+  let isStone = [S_PICKAXE, S_AXE, S_SHOVEL, S_SWORD, S_HOE].includes(id);
+  let isIron = [I_PICKAXE, I_AXE, I_SHOVEL, I_SWORD, I_HOE].includes(id);
+
+  // Default block drawing for placed non-cubes
+  if([TORCH, LADDER, DOOR, TRAPDOOR, FENCE].includes(id)) {
+      ctx.fillStyle = '#a0784a';
+      if(id===TORCH) { ctx.fillRect(14,16,4,16); ctx.fillStyle='yellow'; ctx.fillRect(14,10,4,6); }
+      if(id===LADDER) { ctx.fillRect(6,4,4,24); ctx.fillRect(22,4,4,24); for(let i=8;i<24;i+=6) ctx.fillRect(6,i,20,4); }
+      if(id===DOOR) { ctx.fillRect(6,4,20,24); ctx.fillStyle='#5a3e20'; ctx.fillRect(8,6,16,10); ctx.fillRect(8,18,16,8); }
+      if(id===TRAPDOOR) { ctx.fillRect(4,10,24,12); ctx.fillStyle='#5a3e20'; ctx.fillRect(6,12,20,8); }
+      if(id===FENCE) { ctx.fillRect(10,8,4,16); ctx.fillRect(18,8,4,16); ctx.fillRect(8,12,16,4); ctx.fillRect(8,18,16,4); }
+      return;
+  }
+
+  // Items
+  if(id === COAL) { ctx.fillStyle='#222'; ctx.fillRect(8,8,16,16); ctx.fillStyle='#555'; ctx.fillRect(10,10,6,6); return; }
+  if(id === IRON_INGOT || id === GOLD_INGOT) { ctx.fillStyle = id===IRON_INGOT?'#e0e0e0':'#ffd700'; ctx.beginPath(); ctx.moveTo(8,20); ctx.lineTo(16,12); ctx.lineTo(24,12); ctx.lineTo(16,20); ctx.fill(); return; }
+  if(id === STICK) { ctx.fillStyle='#6e4a2c'; for(let i=8; i<24; i+=2) ctx.fillRect(i, 32-i, 4, 4); return; }
+  
+  if(id === BUCKET) { ctx.fillStyle='#ddd'; ctx.fillRect(8,12,16,12); ctx.fillRect(12,24,8,4); ctx.fillStyle='#999'; ctx.fillRect(10,8,12,4); return; }
+  if(id === SHEARS) { ctx.fillStyle='#ccc'; ctx.fillRect(12,16,12,4); ctx.fillRect(16,12,4,12); return; }
+  if(id === BOW) { ctx.fillStyle='#6e4a2c'; ctx.fillRect(12,4,4,24); ctx.fillRect(8,8,4,16); ctx.fillStyle='#ddd'; ctx.fillRect(16,4,2,24); return; }
+  if(id === ARROW) { ctx.fillStyle='#6e4a2c'; ctx.fillRect(14,10,4,16); ctx.fillStyle='#aaa'; ctx.fillRect(14,6,4,4); ctx.fillStyle='#fff'; ctx.fillRect(12,26,8,4); return; }
+  if(id === COMPASS) { ctx.fillStyle='#aaa'; ctx.beginPath(); ctx.arc(16,16,10,0,Math.PI*2); ctx.fill(); ctx.fillStyle='#d00'; ctx.fillRect(15,10,2,6); ctx.fillStyle='#fff'; ctx.fillRect(15,16,2,6); return; }
+  if(id === CLOCK) { ctx.fillStyle='#ffd700'; ctx.beginPath(); ctx.arc(16,16,10,0,Math.PI*2); ctx.fill(); ctx.fillStyle='#44f'; ctx.beginPath(); ctx.arc(16,16,6,0,Math.PI*2); ctx.fill(); return; }
+
+  // Armors
+  if(id >= I_HELMET && id <= I_BOOTS) {
+      ctx.fillStyle = '#ddd';
+      if(id===I_HELMET) { ctx.fillRect(8,8,16,12); ctx.clearRect(12,14,8,6); }
+      if(id===I_CHEST) { ctx.fillRect(6,8,20,18); ctx.clearRect(12,8,8,4); }
+      if(id===I_LEGS) { ctx.fillRect(8,8,16,20); ctx.clearRect(12,12,8,16); }
+      if(id===I_BOOTS) { ctx.fillRect(8,16,6,12); ctx.fillRect(18,16,6,12); }
+      return;
+  }
+
+  // Tools
+  ctx.fillStyle = '#6e4a2c'; 
   for(let i=8; i<26; i+=2) ctx.fillRect(i, 32-i, 4, 4); // handle
   
-  ctx.fillStyle = isStone ? '#888' : '#a0784a';
-  if(id === W_PICKAXE || id === S_PICKAXE) {
+  ctx.fillStyle = isIron ? '#ddd' : isStone ? '#888' : '#a0784a';
+  if(id === W_PICKAXE || id === S_PICKAXE || id === I_PICKAXE) {
     ctx.fillRect(4, 4, 20, 6); ctx.fillRect(4, 10, 4, 4); ctx.fillRect(20, 10, 4, 4);
-  } else if (id === W_AXE || id === S_AXE) {
+  } else if (id === W_AXE || id === S_AXE || id === I_AXE) {
     ctx.fillRect(16, 4, 10, 12); ctx.fillRect(12, 6, 4, 6);
-  } else if (id === W_SHOVEL || id === S_SHOVEL) {
+  } else if (id === W_SHOVEL || id === S_SHOVEL || id === I_SHOVEL) {
     ctx.fillRect(22, 4, 6, 8);
-  } else if (id === W_SWORD || id === S_SWORD) {
+  } else if (id === W_SWORD || id === S_SWORD || id === I_SWORD) {
     for(let i=4; i<16; i+=2) ctx.fillRect(i, 32-i-8, 6, 6); // blade
     ctx.fillStyle = '#6e4a2c'; ctx.fillRect(10, 18, 12, 4); // guard
+  } else if (id === W_HOE || id === S_HOE || id === I_HOE) {
+    ctx.fillRect(10, 4, 14, 6); ctx.fillRect(10, 10, 4, 4);
   }
 }
 
@@ -219,13 +301,19 @@ function buildMats(){
   const texPlanks=getTexPlanks(), texCraftSide=getTexCraftSide(), texCraftTop=getTexCraftTop();
 
   MATS[GRASS]=[ M(texGrSide), M(texGrSide), M(texGrTop), M(texDirt), M(texGrSide), M(texGrSide) ];
-  MATS[DIRT]=M(texDirt); MATS[STONE]=M(getTexStone());
+  MATS[DIRT]=M(texDirt); MATS[STONE]=M(getTexStone()); MATS[COBBLESTONE]=M(getTexCobble());
   MATS[WOOD]=[ M(texWoodSide), M(texWoodSide), M(texWoodTop), M(texWoodTop), M(texWoodSide), M(texWoodSide) ];
   MATS[LEAVES]=M(getTexLeaves(),true,.9); MATS[SAND]=M(getTexSand());
   MATS[WATER]=M(getTexWater(),true,.85); MATS[SNOW]=M(getTexSnow());
-  MATS[GRAVEL]=M(getTexGravel()); MATS[COAL]=M(getTexCoal());
+  MATS[GRAVEL]=M(getTexGravel()); MATS[COAL_ORE]=M(getTexCoal()); MATS[IRON_ORE]=M(getTexIronOre()); MATS[GOLD_ORE]=M(getTexGoldOre());
   MATS[PLANKS]=M(texPlanks); 
   MATS[CRAFT_TABLE]=[M(texCraftSide),M(texCraftSide),M(texCraftTop),M(texPlanks),M(texCraftSide),M(texCraftSide)];
+  MATS[GLASS]=M(getTexGlass(),true,.9); MATS[BRICKS]=M(getTexBricks()); MATS[OBSIDIAN]=M(getTexObsidian());
+  MATS[BOOKSHELF]=[M(getTexBookshelfSide()),M(getTexBookshelfSide()),M(texPlanks),M(texPlanks),M(getTexBookshelfSide()),M(getTexBookshelfSide())];
+  MATS[SPONGE]=M(getTexSponge()); 
+  
+  // Non-full blocks rendered visually as full blocks in hand but not placeable visually yet, we map them to dirt visually just for safety if placed
+  MATS[TORCH]=M(getTexTorch(),true,.9); MATS[LADDER]=M(getTexPlanks()); MATS[DOOR]=M(getTexPlanks()); MATS[TRAPDOOR]=M(getTexPlanks()); MATS[FENCE]=M(getTexWoodSide());
 
   for(let i=0; i<=9; i++) CRACK_MATS.push(new THREE.MeshBasicMaterial({map:canvasToTex(getTexCrack(i)), transparent:true, depthWrite: false}));
 }
@@ -256,8 +344,8 @@ const FACE_VERTS=[
   [[1,0,1],[1,1,1],[0,1,1],[0,0,1]], [[0,0,0],[0,1,0],[1,1,0],[1,0,0]], 
 ];
 const FACE_NORMALS=[[1,0,0],[-1,0,0],[0,1,0],[0,-1,0],[0,0,1],[0,0,-1]];
-function isSolid(b){return b!==AIR&&b!==WATER&&b!==LEAVES&&b<100;} 
-function isOpaque(b){return b!==AIR&&b!==WATER&&b!==LEAVES&&b<100;}
+function isSolid(b){return b!==AIR&&b!==WATER&&b!==LEAVES&&b!==TORCH&&b!==LADDER&&b<100;} 
+function isOpaque(b){return b!==AIR&&b!==WATER&&b!==LEAVES&&b!==GLASS&&b!==TORCH&&b!==LADDER&&b!==FENCE&&b!==DOOR&&b!==TRAPDOOR&&b<100;}
 
 class Chunk{
   constructor(cx,cz,scene){
@@ -273,17 +361,37 @@ class Chunk{
       const wx=this.cx*CS+x, wz=this.cz*CS+z, h=getHeight(wx,wz);
       for(let y=0;y<CH;y++){
         let b=AIR;
-        if(y===0) b=STONE; else if(y<h-5) b=STONE;
-        else if(y<h-3) b=hash2(wx+y*.3,wz+y*.7)<.05?GRAVEL:hash2(wx+y*.3,wz+y*.7)<.09?COAL:STONE;
+        if(y===0) b=OBSIDIAN; else if(y<h-5) b=STONE;
+        else if(y<h-3) {
+            let n = hash2(wx+y*.3,wz+y*.7);
+            b = n<.04 ? GRAVEL : n<.08 ? COAL_ORE : n<.12 ? IRON_ORE : n<.14 ? GOLD_ORE : STONE;
+        }
         else if(y<h-1) b=DIRT; else if(y===h-1) b=h<=SEA+1?SAND:h>SEA+18?SNOW:GRASS;
         else if(y>h-1&&y<=SEA) b=WATER;
         this.set(x,y,z,b);
       }
-      if(hasTree(wx,wz,h)&&x>=2&&x<=CS-3&&z>=2&&z<=CS-3){
+      // MINECRAFT STYLE TREE
+      if(hasTree(wx,wz,h)&&x>=3&&x<=CS-4&&z>=3&&z<=CS-4){
         const th=4+Math.floor(treeSeed(wx+1,wz)*3); for(let t=0;t<th;t++) this.set(x,h+t,z,WOOD);
-        const top=h+th;
-        for(let lx=-2;lx<=2;lx++) for(let lz=-2;lz<=2;lz++) for(let ly=-1;ly<=3;ly++)
-          if(Math.abs(lx)+Math.abs(lz)+Math.abs(ly)<=4 && this.get(x+lx,top+ly,z+lz)===AIR) this.set(x+lx,top+ly,z+lz,LEAVES);
+        const top=h+th-1;
+        // Canopy Layer 1 & 2 (5x5, minus corners)
+        for(let ly=-2; ly<=-1; ly++) {
+          for(let lx=-2;lx<=2;lx++) for(let lz=-2;lz<=2;lz++) {
+            if(Math.abs(lx)===2 && Math.abs(lz)===2 && Math.random()<0.5) continue;
+            if(this.get(x+lx,top+ly,z+lz)===AIR) this.set(x+lx,top+ly,z+lz,LEAVES);
+          }
+        }
+        // Canopy Layer 3 (3x3)
+        for(let lx=-1;lx<=1;lx++) for(let lz=-1;lz<=1;lz++) {
+          if(Math.abs(lx)===1 && Math.abs(lz)===1 && Math.random()<0.5) continue;
+          if(this.get(x+lx,top,z+lz)===AIR) this.set(x+lx,top,z+lz,LEAVES);
+        }
+        // Canopy Layer 4 (Cross shape)
+        for(let lx=-1;lx<=1;lx++) for(let lz=-1;lz<=1;lz++) {
+          if(Math.abs(lx)+Math.abs(lz)<=1) {
+             if(this.get(x+lx,top+1,z+lz)===AIR) this.set(x+lx,top+1,z+lz,LEAVES);
+          }
+        }
       }
     }
   }
@@ -296,7 +404,7 @@ class Chunk{
       const wx=this.cx*CS+x, wz=this.cz*CS+z;
       for(let fi=0;fi<6;fi++){
         const d=DIRS[fi], nb=this.get(x+d[0],y+d[1],z+d[2]);
-        if(b===WATER&&nb===WATER)continue; if(b===LEAVES&&nb===LEAVES)continue;
+        if(b===WATER&&nb===WATER)continue; if(b===LEAVES&&nb===LEAVES)continue; if(b===GLASS&&nb===GLASS)continue;
         if(isOpaque(nb)&&b!==WATER)continue; if(b===WATER&&isOpaque(nb))continue;
         const key=b*10+fi, bf=getBuf(key), i0=bf.pos.length/3, fv=FACE_VERTS[fi], fn=FACE_NORMALS[fi];
         for(let v=0;v<4;v++){ bf.pos.push(wx+fv[v][0], y+fv[v][1], wz+fv[v][2]); bf.nor.push(fn[0],fn[1],fn[2]); }
@@ -323,7 +431,7 @@ class World{
   key(cx,cz){return `${cx},${cz}`;}
   getChunk(cx,cz){return this.chunks.get(this.key(cx,cz))||null;}
   getBlock(wx,wy,wz){
-    if(wy<0)return STONE; if(wy>=CH)return AIR;
+    if(wy<0)return OBSIDIAN; if(wy>=CH)return AIR;
     const cx=Math.floor(wx/CS), cz=Math.floor(wz/CS), ch=this.getChunk(cx,cz);
     if(!ch)return AIR; return ch.get(((wx%CS)+CS)%CS, wy, ((wz%CS)+CS)%CS);
   }
@@ -374,44 +482,74 @@ function raycast(world,ox,oy,oz,dx,dy,dz,maxDist){
 }
 
 /* ══════════════════════════════════════════════════════════
-   INVENTORY, CRAFTING & UI
+   INVENTORY, CRAFTING, RECIPE BOOK & UI
 ══════════════════════════════════════════════════════════ */
 let inventory = Array(36).fill(null).map(() => ({id: AIR, count: 0}));
 let craftGrid = Array(9).fill(null).map(() => ({id: AIR, count: 0}));
 let craftResult = {id: AIR, count: 0};
 let cursorItem = {id: AIR, count: 0};
 let selectedSlot = 0;
-let inUI = false;
+let inUI = false; let inRecipeBook = false;
 let isCraftingTable = false;
 
 const RECIPES = [
   { out: PLANKS, count: 4, shape: [[WOOD]] },
   { out: STICK, count: 4, shape: [[PLANKS],[PLANKS]] },
   { out: CRAFT_TABLE, count: 1, shape: [[PLANKS,PLANKS],[PLANKS,PLANKS]] },
+  { out: TORCH, count: 4, shape: [[COAL],[STICK]] },
+  { out: IRON_INGOT, count: 1, shape: [[IRON_ORE]] }, // Simulated Smelting
+  { out: GOLD_INGOT, count: 1, shape: [[GOLD_ORE]] }, // Simulated Smelting
+  { out: GLASS, count: 1, shape: [[SAND]] }, // Simulated Smelting
+  { out: BRICKS, count: 4, shape: [[DIRT,DIRT],[DIRT,DIRT]] },
+  { out: OBSIDIAN, count: 1, shape: [[WATER,WATER],[WATER,WATER]] },
+  { out: BOOKSHELF, count: 1, shape: [[PLANKS,PLANKS,PLANKS],[PLANKS,PLANKS,PLANKS],[PLANKS,PLANKS,PLANKS]] },
+  
   { out: W_PICKAXE, count: 1, shape: [[PLANKS,PLANKS,PLANKS],[AIR,STICK,AIR],[AIR,STICK,AIR]] },
-  { out: S_PICKAXE, count: 1, shape: [[STONE,STONE,STONE],[AIR,STICK,AIR],[AIR,STICK,AIR]] },
+  { out: S_PICKAXE, count: 1, shape: [[COBBLESTONE,COBBLESTONE,COBBLESTONE],[AIR,STICK,AIR],[AIR,STICK,AIR]] },
+  { out: I_PICKAXE, count: 1, shape: [[IRON_INGOT,IRON_INGOT,IRON_INGOT],[AIR,STICK,AIR],[AIR,STICK,AIR]] },
+  
   { out: W_AXE, count: 1, shape: [[PLANKS,PLANKS],[PLANKS,STICK],[AIR,STICK]] },
-  { out: W_AXE, count: 1, shape: [[PLANKS,PLANKS],[STICK,PLANKS],[STICK,AIR]] },
-  { out: S_AXE, count: 1, shape: [[STONE,STONE],[STONE,STICK],[AIR,STICK]] },
-  { out: S_AXE, count: 1, shape: [[STONE,STONE],[STICK,STONE],[STICK,AIR]] },
+  { out: S_AXE, count: 1, shape: [[COBBLESTONE,COBBLESTONE],[COBBLESTONE,STICK],[AIR,STICK]] },
+  { out: I_AXE, count: 1, shape: [[IRON_INGOT,IRON_INGOT],[IRON_INGOT,STICK],[AIR,STICK]] },
+  
   { out: W_SHOVEL, count: 1, shape: [[PLANKS],[STICK],[STICK]] },
-  { out: S_SHOVEL, count: 1, shape: [[STONE],[STICK],[STICK]] },
+  { out: S_SHOVEL, count: 1, shape: [[COBBLESTONE],[STICK],[STICK]] },
+  { out: I_SHOVEL, count: 1, shape: [[IRON_INGOT],[STICK],[STICK]] },
+  
   { out: W_SWORD, count: 1, shape: [[PLANKS],[PLANKS],[STICK]] },
-  { out: S_SWORD, count: 1, shape: [[STONE],[STONE],[STICK]] },
+  { out: S_SWORD, count: 1, shape: [[COBBLESTONE],[COBBLESTONE],[STICK]] },
+  { out: I_SWORD, count: 1, shape: [[IRON_INGOT],[IRON_INGOT],[STICK]] },
+
+  { out: W_HOE, count: 1, shape: [[PLANKS,PLANKS],[AIR,STICK],[AIR,STICK]] },
+  { out: S_HOE, count: 1, shape: [[COBBLESTONE,COBBLESTONE],[AIR,STICK],[AIR,STICK]] },
+  { out: I_HOE, count: 1, shape: [[IRON_INGOT,IRON_INGOT],[AIR,STICK],[AIR,STICK]] },
+
+  { out: I_HELMET, count: 1, shape: [[IRON_INGOT,IRON_INGOT,IRON_INGOT],[IRON_INGOT,AIR,IRON_INGOT]] },
+  { out: I_CHEST, count: 1, shape: [[IRON_INGOT,AIR,IRON_INGOT],[IRON_INGOT,IRON_INGOT,IRON_INGOT],[IRON_INGOT,IRON_INGOT,IRON_INGOT]] },
+  { out: I_LEGS, count: 1, shape: [[IRON_INGOT,IRON_INGOT,IRON_INGOT],[IRON_INGOT,AIR,IRON_INGOT],[IRON_INGOT,AIR,IRON_INGOT]] },
+  { out: I_BOOTS, count: 1, shape: [[IRON_INGOT,AIR,IRON_INGOT],[IRON_INGOT,AIR,IRON_INGOT]] },
+
+  { out: BUCKET, count: 1, shape: [[IRON_INGOT,AIR,IRON_INGOT],[AIR,IRON_INGOT,AIR]] },
+  { out: SHEARS, count: 1, shape: [[IRON_INGOT,AIR],[AIR,IRON_INGOT]] },
+  { out: BOW, count: 1, shape: [[STICK,STICK,AIR],[STICK,AIR,STICK],[STICK,STICK,AIR]] },
+  { out: ARROW, count: 4, shape: [[IRON_INGOT],[STICK]] },
+  { out: LADDER, count: 3, shape: [[STICK,AIR,STICK],[STICK,STICK,STICK],[STICK,AIR,STICK]] },
+  { out: FENCE, count: 3, shape: [[PLANKS,STICK,PLANKS],[PLANKS,STICK,PLANKS]] },
+  { out: DOOR, count: 1, shape: [[PLANKS,PLANKS],[PLANKS,PLANKS],[PLANKS,PLANKS]] },
+  { out: TRAPDOOR, count: 2, shape: [[PLANKS,PLANKS,PLANKS],[PLANKS,PLANKS,PLANKS]] },
+  { out: COMPASS, count: 1, shape: [[AIR,IRON_INGOT,AIR],[IRON_INGOT,IRON_INGOT,IRON_INGOT],[AIR,IRON_INGOT,AIR]] },
+  { out: CLOCK, count: 1, shape: [[AIR,GOLD_INGOT,AIR],[GOLD_INGOT,GOLD_INGOT,GOLD_INGOT],[AIR,GOLD_INGOT,AIR]] }
 ];
 
 function toggleUI(show, isTable = false) {
   inUI = show;
+  inRecipeBook = false;
   isCraftingTable = isTable;
   document.getElementById('invScreen').style.display = show ? 'flex' : 'none';
+  document.getElementById('recipeScreen').style.display = 'none';
   
-  if(show) {
-      document.exitPointerLock();
-  } else {
-      document.getElementById('c').requestPointerLock();
-  }
+  if(show) { document.exitPointerLock(); } else { document.getElementById('c').requestPointerLock(); }
 
-  // Drop cursor/crafting items accurately without losing stack count!
   if(!show && cursorItem.id !== AIR) { spawnDrop(px, py, pz, cursorItem.id, cursorItem.count); cursorItem = {id:AIR, count:0}; }
   if(!show) {
     for(let i=0; i<craftGrid.length; i++) {
@@ -419,17 +557,50 @@ function toggleUI(show, isTable = false) {
     }
     craftResult = {id: AIR, count: 0};
   }
-  
   if(show) renderInventoryUI();
   document.getElementById('craftLabel').innerText = isTable ? "Crafting Table" : "Crafting";
   document.getElementById('craftGridUI').className = isTable ? "craft-grid large" : "craft-grid";
 }
 
+function toggleRecipeBook(show) {
+    inRecipeBook = show; inUI = show;
+    document.getElementById('invScreen').style.display = 'none';
+    document.getElementById('recipeScreen').style.display = show ? 'flex' : 'none';
+    if(show) { document.exitPointerLock(); renderRecipeBook(); } 
+    else { document.getElementById('c').requestPointerLock(); }
+}
+
+function renderRecipeBook() {
+    const list = document.getElementById('recipeList'); list.innerHTML = '';
+    RECIPES.forEach(r => {
+        let row = document.createElement('div'); row.className = 'recipe-row';
+        let grid = document.createElement('div'); grid.className = 'recipe-mini-grid';
+        let is3x3 = r.shape.length > 2 || r.shape[0].length > 2;
+        
+        for(let y=0; y<3; y++) {
+            for(let x=0; x<3; x++) {
+                let s = document.createElement('div'); s.className = 'mini-slot';
+                let id = AIR;
+                if(y < r.shape.length && x < r.shape[y].length) id = r.shape[y][x];
+                if(id !== AIR) { let cv = document.createElement('canvas'); drawSlotCanvas(cv, id); s.appendChild(cv); }
+                grid.appendChild(s);
+            }
+        }
+        
+        let arrow = document.createElement('div'); arrow.className = 'arrow'; arrow.innerText = '➔';
+        let outSlot = document.createElement('div'); outSlot.className = 'slot';
+        let oCv = document.createElement('canvas'); drawSlotCanvas(oCv, r.out); outSlot.appendChild(oCv);
+        let count = document.createElement('span'); count.className = 'slot-count'; count.innerText = r.count > 1 ? r.count : ''; outSlot.appendChild(count);
+        let name = document.createElement('div'); name.className = 'recipe-name'; name.innerText = BNAMES[r.out] + (is3x3 ? ' (Table)' : '');
+
+        row.appendChild(grid); row.appendChild(arrow); row.appendChild(outSlot); row.appendChild(name);
+        list.appendChild(row);
+    });
+}
+
 function checkCrafting() {
   let grid3x3 = [ [craftGrid[0], craftGrid[1], craftGrid[2]], [craftGrid[3], craftGrid[4], craftGrid[5]], [craftGrid[6], craftGrid[7], craftGrid[8]] ];
-  if(!isCraftingTable) {
-     grid3x3 = [ [craftGrid[0], craftGrid[1], {id:0}], [craftGrid[2], craftGrid[3], {id:0}], [{id:0}, {id:0}, {id:0}] ];
-  }
+  if(!isCraftingTable) { grid3x3 = [ [craftGrid[0], craftGrid[1], {id:0}], [craftGrid[2], craftGrid[3], {id:0}], [{id:0}, {id:0}, {id:0}] ]; }
   let minX=3, maxX=-1, minY=3, maxY=-1;
   for(let y=0;y<3;y++) for(let x=0;x<3;x++) if(grid3x3[y][x].id !== AIR) { minX=Math.min(minX,x); maxX=Math.max(maxX,x); minY=Math.min(minY,y); maxY=Math.max(maxY,y); }
   craftResult.id = AIR; craftResult.count = 0;
@@ -467,7 +638,7 @@ function slotClick(e, slotObj, isResult = false) {
           consumeCrafting(); checkCrafting();
       }
   } else {
-      if (e.button === 0) { // Left click
+      if (e.button === 0) {
           if (cursorItem.id === slotObj.id && cursorItem.id !== AIR) {
               let space = 64 - slotObj.count, move = Math.min(space, cursorItem.count);
               slotObj.count += move; cursorItem.count -= move;
@@ -476,7 +647,7 @@ function slotClick(e, slotObj, isResult = false) {
               let temp = {id: slotObj.id, count: slotObj.count};
               slotObj.id = cursorItem.id; slotObj.count = cursorItem.count; cursorItem = temp;
           }
-      } else if (e.button === 2) { // Right click
+      } else if (e.button === 2) {
           if (cursorItem.id === AIR && slotObj.id !== AIR) {
               let half = Math.ceil(slotObj.count/2); cursorItem = {id: slotObj.id, count: half};
               slotObj.count -= half; if(slotObj.count===0) slotObj.id = AIR;
@@ -493,16 +664,21 @@ function slotClick(e, slotObj, isResult = false) {
 
 function drawSlotCanvas(cv, id) {
   const ctx = cv.getContext('2d'); ctx.clearRect(0, 0, 32, 32); ctx.imageSmoothingEnabled = false;
-  if (id <= 12) {
+  if (id < 100) {
       let srcCv;
       switch(id){
-        case GRASS:srcCv=getTexGrassSide();break; case DIRT:srcCv=getTexDirt();break; case STONE:srcCv=getTexStone();break;
+        case GRASS:srcCv=getTexGrassSide();break; case DIRT:srcCv=getTexDirt();break; 
+        case STONE:srcCv=getTexStone();break; case COBBLESTONE:srcCv=getTexCobble();break;
         case WOOD:srcCv=getTexWoodSide();break; case LEAVES:srcCv=getTexLeaves();break; case SAND:srcCv=getTexSand();break;
         case WATER:srcCv=getTexWater();break; case SNOW:srcCv=getTexSnow();break; case GRAVEL:srcCv=getTexGravel();break; 
-        case COAL:srcCv=getTexCoal();break; case PLANKS:srcCv=getTexPlanks();break; case CRAFT_TABLE:srcCv=getTexCraftSide();break;
+        case COAL_ORE:srcCv=getTexCoal();break; case IRON_ORE:srcCv=getTexIronOre();break; case GOLD_ORE:srcCv=getTexGoldOre();break;
+        case PLANKS:srcCv=getTexPlanks();break; case CRAFT_TABLE:srcCv=getTexCraftSide();break;
+        case GLASS:srcCv=getTexGlass();break; case BRICKS:srcCv=getTexBricks();break; case OBSIDIAN:srcCv=getTexObsidian();break;
+        case BOOKSHELF:srcCv=getTexBookshelfSide();break; case SPONGE:srcCv=getTexSponge();break;
       }
-      if(srcCv) ctx.drawImage(srcCv,0,0,32,32);
-  } else { drawItemIcon(ctx, id); }
+      if(srcCv) { ctx.drawImage(srcCv,0,0,32,32); return; }
+  } 
+  drawItemIcon(ctx, id); 
 }
 
 function createDOMSlot(slotObj, clickHandler) {
@@ -511,13 +687,7 @@ function createDOMSlot(slotObj, clickHandler) {
     const cv=document.createElement('canvas'); cv.width=cv.height=32; drawSlotCanvas(cv, slotObj.id); el.append(cv);
     const countLabel = document.createElement('span'); countLabel.className = 'slot-count'; countLabel.innerText = slotObj.count > 1 ? slotObj.count : ''; el.append(countLabel);
   }
-  // Prevent ghost dragging by avoiding default mouse behavior in UI
-  el.addEventListener('mousedown', e => { 
-      if(inUI) { 
-          e.preventDefault(); // Stop default web drag events
-          clickHandler(e); 
-      } 
-  });
+  el.addEventListener('mousedown', e => { if(inUI) { e.preventDefault(); clickHandler(e); } });
   return el;
 }
 
@@ -527,29 +697,16 @@ function renderInventoryUI() {
   const cGrid = document.getElementById('craftGridUI'); cGrid.innerHTML='';
   const cOut = document.getElementById('craftOutUI'); cOut.innerHTML='';
   
-  // Render Hotbar
   for(let i=0; i<9; i++) hInv.appendChild(createDOMSlot(inventory[i], e => slotClick(e, inventory[i])));
-  // Render Main Inv
   for(let i=9; i<36; i++) mInv.appendChild(createDOMSlot(inventory[i], e => slotClick(e, inventory[i])));
-  // Render Craft Grid
   let gridCount = isCraftingTable ? 9 : 4;
   for(let i=0; i<gridCount; i++) cGrid.appendChild(createDOMSlot(craftGrid[i], e => slotClick(e, craftGrid[i])));
   
-  // Render Craft Out properly without throwing Node errors
   if (craftResult.id !== AIR && craftResult.count > 0) {
-      const cv = document.createElement('canvas');
-      cv.width = cv.height = 32;
-      drawSlotCanvas(cv, craftResult.id);
-      cOut.appendChild(cv);
-      if (craftResult.count > 1) {
-          const lbl = document.createElement('span');
-          lbl.className = 'slot-count';
-          lbl.innerText = craftResult.count;
-          cOut.appendChild(lbl);
-      }
+      const cv = document.createElement('canvas'); cv.width = cv.height = 32; drawSlotCanvas(cv, craftResult.id); cOut.appendChild(cv);
+      if (craftResult.count > 1) { const lbl = document.createElement('span'); lbl.className = 'slot-count'; lbl.innerText = craftResult.count; cOut.appendChild(lbl); }
   }
 
-  // Update Cursor Item
   const cursorEl = document.getElementById('cursorItem');
   if(cursorItem.id !== AIR) {
     cursorEl.style.display = 'flex'; cursorEl.innerHTML='';
@@ -577,7 +734,7 @@ function setSlot(i){
 }
 
 /* ══════════════════════════════════════════════════════════
-   SURVIVAL LOGIC & PHYSICS
+   SURVIVAL LOGIC, PHYSICS & DROPS
 ══════════════════════════════════════════════════════════ */
 const PW=0.55, PH=1.8, GRAVITY=28, JUMP_VEL=9.5;
 function playerBlocked(w,cx,fy,cz){
@@ -594,7 +751,7 @@ function isOnGround(w,cx,fy,cz){
   return false;
 }
 
-let world,camera,renderer,scene, highlightMesh, crackMesh;
+let world,camera,renderer,scene, highlightMesh, crackMesh, sun, ambient;
 let px=8.5,py=20,pz=8.5, vx=0,vy=0,vz=0, yaw=0,pitch=0;
 let onGround=false, jumpQueued=false;
 let KEYS={};
@@ -603,6 +760,8 @@ const drops = [];
 let dropGeo;
 let leftMouseHeld=false, rightMouseHeld=false, breakTarget=null, breakProgress=0;
 const breakBar = document.getElementById('breakBar'), breakBarContainer = document.getElementById('breakBarContainer');
+
+let gameTime = 0.25; // 0.25 is Morning, 0.75 is Night
 
 function lookDir(){ return{x:-Math.sin(yaw)*Math.cos(pitch), y:Math.sin(pitch), z:-Math.cos(yaw)*Math.cos(pitch)}; }
 
@@ -643,10 +802,19 @@ function renderHearts() {
 }
 
 function spawnDrop(x,y,z, id, count=1) {
-  if(id === AIR || id === WATER || id === LEAVES) return;
-  let mat = (id <= 12) ? getMatForFace(id, 2) : new THREE.MeshBasicMaterial({color: 0xa0784a}); 
+  if(id === AIR || id === WATER) return;
+  let mat = (id < 100 && id !== GLASS) ? getMatForFace(id, 2) : new THREE.MeshBasicMaterial({color: 0xa0784a}); 
   let mesh = new THREE.Mesh(dropGeo, mat); mesh.castShadow = true; mesh.position.set(x+0.5, y+0.5, z+0.5); scene.add(mesh);
   drops.push({ mesh, id, count, vx: (Math.random()-0.5)*3, vy: 3, vz: (Math.random()-0.5)*3, age: 0 });
+}
+
+function getCorrectDrop(blockId, toolId) {
+    if(blockId === STONE) return COBBLESTONE;
+    if(blockId === COAL_ORE) return COAL;
+    if(blockId === GRASS) return DIRT;
+    if(blockId === LEAVES) return toolId === SHEARS ? LEAVES : AIR;
+    if(blockId === GLASS) return AIR;
+    return blockId;
 }
 
 function updateDrops(dt) {
@@ -672,32 +840,35 @@ function addToInventory(id, count=1) {
 
 /* Mining Rules & Tools */
 function canHarvest(bId, tId) {
-  if([STONE, COAL].includes(bId)) return [W_PICKAXE, S_PICKAXE].includes(tId);
-  if([SNOW, GRAVEL].includes(bId)) return [W_SHOVEL, S_SHOVEL].includes(tId);
-  return true; // Barehand can do Wood, Dirt, Sand, Grass, Leaves.
+  if([STONE, COBBLESTONE, COAL_ORE].includes(bId)) return [W_PICKAXE, S_PICKAXE, I_PICKAXE].includes(tId);
+  if([IRON_ORE, GOLD_ORE, OBSIDIAN].includes(bId)) return [S_PICKAXE, I_PICKAXE].includes(tId); // Need better pickaxe
+  return true; 
 }
 
 function getMiningSpeed(b, t) {
-  let isStone = [STONE, COAL].includes(b);
-  let isWood = [WOOD, PLANKS, CRAFT_TABLE].includes(b);
-  let isDirt = [DIRT, GRASS, SAND, GRAVEL, SNOW].includes(b);
+  let isStone = [STONE, COBBLESTONE, COAL_ORE, IRON_ORE, GOLD_ORE, BRICKS, OBSIDIAN].includes(b);
+  let isWood = [WOOD, PLANKS, CRAFT_TABLE, BOOKSHELF].includes(b);
+  let isDirt = [DIRT, GRASS, SAND, GRAVEL, SNOW, SPONGE].includes(b);
   
   if(isStone) {
+      if(t === I_PICKAXE) return 9;
       if(t === S_PICKAXE) return 6;
       if(t === W_PICKAXE) return 3;
-      return 0.15; // Bare hand takes forever on stone
+      return 0.15; 
   }
   if(isWood) {
+      if(t === I_AXE) return 9;
       if(t === S_AXE) return 6;
       if(t === W_AXE) return 3;
-      return 1; // Wood breaks at normal speed by hand
+      return 1;
   }
   if(isDirt) {
+      if(t === I_SHOVEL) return 9;
       if(t === S_SHOVEL) return 6;
       if(t === W_SHOVEL) return 3;
       return 1.5; 
   }
-  
+  if(b === LEAVES && t === SHEARS) return 15;
   return 1;
 }
 
@@ -718,7 +889,10 @@ function updateMining(dt, hit) {
     }
     
     if (breakProgress >= 1) {
-      if(canHarvest(hit.block, tool)) spawnDrop(hit.hx, hit.hy, hit.hz, hit.block);
+      if(canHarvest(hit.block, tool)) {
+          let dropId = getCorrectDrop(hit.block, tool);
+          if(dropId !== AIR) spawnDrop(hit.hx, hit.hy, hit.hz, dropId);
+      }
       world.setBlock(hit.hx, hit.hy, hit.hz, AIR);
       resetMining();
     }
@@ -737,45 +911,39 @@ function setupInput(){
         const n=parseInt(e.key); if(n>=1&&n<=9) setSlot(n-1);
         if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code))e.preventDefault();
     }
-    if(e.code==='KeyE' && document.getElementById('splash').style.display === 'none') { toggleUI(!inUI, false); }
+    if(e.code==='KeyE' && document.getElementById('splash').style.display === 'none') { 
+        if(inRecipeBook) toggleRecipeBook(false);
+        else toggleUI(!inUI, false); 
+    }
+    if(e.code==='KeyR' && document.getElementById('splash').style.display === 'none') {
+        if(inUI && !inRecipeBook) toggleUI(false);
+        toggleRecipeBook(!inRecipeBook);
+    }
   });
   document.addEventListener('keyup',e=>KEYS[e.code]=false);
 
-  // Standard Mouse Pointer Lock events
   document.addEventListener('pointerlockchange', () => {
       if (document.pointerLockElement !== cv && !inUI && document.getElementById('splash').style.display === 'none') {
           for(let k in KEYS) KEYS[k] = false;
-          leftMouseHeld = false;
-          rightMouseHeld = false;
-          resetMining();
+          leftMouseHeld = false; rightMouseHeld = false; resetMining();
       }
   });
 
   cv.addEventListener('mousedown',e=>{
     if(inUI) return;
-    if(document.pointerLockElement !== cv) {
-        cv.requestPointerLock();
-        return;
-    }
-    if(e.button===0) { 
-        leftMouseHeld = true; // Mine
-    }
+    if(document.pointerLockElement !== cv) { cv.requestPointerLock(); return; }
+    if(e.button===0) { leftMouseHeld = true; }
     if(e.button===2) {
         rightMouseHeld = true; 
         const ld=lookDir(); const hit=raycast(world,px,py+PH*.88,pz,ld.x,ld.y,ld.z,6);
         
-        // Open Crafting Table
-        if(hit && hit.block === CRAFT_TABLE) { 
-            toggleUI(true, true); 
-            rightMouseHeld = false;
-            return; 
-        }
+        if(hit && hit.block === CRAFT_TABLE) { toggleUI(true, true); rightMouseHeld = false; return; }
 
-        // Place block
         let slotData = inventory[selectedSlot];
-        if(hit && slotData.id !== AIR && slotData.id <= 12 && slotData.count > 0){
+        // Allow placing blocks < 100
+        if(hit && slotData.id !== AIR && slotData.id < 100 && slotData.count > 0){
             const h2=PW/2+.01, inPlayer=(hit.px<px+h2&&hit.px+1>px-h2&&hit.py<py+PH&&hit.py+1>py&&hit.pz<pz+h2&&hit.pz+1>pz-h2);
-            if(!inPlayer) {
+            if(!inPlayer || !isSolid(slotData.id)) {
                 world.setBlock(hit.px,hit.py,hit.pz,slotData.id);
                 slotData.count--; if(slotData.count <= 0) slotData.id = AIR; buildHotbar();
             }
@@ -783,17 +951,14 @@ function setupInput(){
     }
   });
 
-  // ✨ RESTORED: Mouse tracking logic so items stick to your cursor in the UI
   document.addEventListener('mousemove', e => {
     if(inUI) {
         const cursorEl = document.getElementById('cursorItem');
-        cursorEl.style.left = e.clientX + 'px';
-        cursorEl.style.top = e.clientY + 'px';
+        cursorEl.style.left = e.clientX + 'px'; cursorEl.style.top = e.clientY + 'px';
         return;
     }
     if(document.pointerLockElement === cv) {
-      yaw -= e.movementX * 0.003; 
-      pitch -= e.movementY * 0.003; 
+      yaw -= e.movementX * 0.003; pitch -= e.movementY * 0.003; 
       pitch=Math.max(-1.55,Math.min(1.55,pitch));
     }
   });
@@ -806,47 +971,40 @@ function setupInput(){
 
   cv.addEventListener('contextmenu',e=>e.preventDefault());
   cv.addEventListener('wheel',e=>{ if(!inUI) { selectedSlot=(selectedSlot+(e.deltaY>0?1:8))%9; setSlot(selectedSlot); }},{passive:true});
+}
 
-  // Mobile Touch Controls Adapting to New Input scheme
-  let touchTimeout; let dragging = false; let hasDragged = false; let lastMX=0, lastMY=0;
-  cv.addEventListener('touchstart', e => {
-    if(inUI) return;
-    if(e.touches.length === 1) {
-      dragging = true; hasDragged = false;
-      lastMX = e.touches[0].clientX; lastMY = e.touches[0].clientY;
-      touchTimeout = setTimeout(() => { if(!hasDragged) { leftMouseHeld = true; dragging = false; } }, 350);
-    }
-  }, {passive: false});
+function updateDayNight(dt) {
+    gameTime += dt * 0.003; // Real day cycle
+    if(gameTime > 1) gameTime -= 1;
+    
+    let sunAngle = gameTime * Math.PI * 2;
+    sun.position.set(200 * Math.cos(sunAngle), 200 * Math.sin(sunAngle), 50);
 
-  cv.addEventListener('touchmove', e => {
-    if(inUI) return;
-    if(dragging && e.touches.length === 1) {
-      yaw-=(e.touches[0].clientX-lastMX)*0.0038; pitch-=(e.touches[0].clientY-lastMY)*0.0038;
-      pitch=Math.max(-1.55,Math.min(1.55,pitch));
-      lastMX=e.touches[0].clientX; lastMY=e.touches[0].clientY;
-      hasDragged = true;
-      clearTimeout(touchTimeout); 
-    }
-  }, {passive: false});
+    let isDay = Math.sin(sunAngle) > 0;
+    let sunIntensity = Math.max(0, Math.sin(sunAngle));
+    
+    sun.intensity = sunIntensity * 0.9;
+    ambient.intensity = 0.15 + sunIntensity * 0.45;
 
-  cv.addEventListener('touchend', e => {
-    if(inUI) return;
-    clearTimeout(touchTimeout);
-    if(leftMouseHeld) { leftMouseHeld = false; resetMining(); } 
-    else if (dragging && !hasDragged) {
-      const ld=lookDir(); const hit=raycast(world,px,py+PH*.88,pz,ld.x,ld.y,ld.z,6);
-      let slotData = inventory[selectedSlot];
-      if(hit && hit.block === CRAFT_TABLE) { toggleUI(true, true); return; }
-      if(hit && slotData.id !== AIR && slotData.id <= 12 && slotData.count > 0){
-        const h2=PW/2+.01, inPlayer=(hit.px<px+h2&&hit.px+1>px-h2&&hit.py<py+PH&&hit.py+1>py&&hit.pz<pz+h2&&hit.pz+1>pz-h2);
-        if(!inPlayer) {
-          world.setBlock(hit.px,hit.py,hit.pz,slotData.id);
-          slotData.count--; if(slotData.count <= 0) slotData.id = AIR; buildHotbar();
-        }
-      }
+    let skyCol = new THREE.Color();
+    if (gameTime > 0.45 && gameTime < 0.55) {
+        let lerp = (gameTime - 0.45) * 10;
+        skyCol.lerpColors(new THREE.Color(0x8cb6ff), new THREE.Color(0xfd5e53), lerp); // Day to Dusk
+    } else if (gameTime >= 0.55 && gameTime <= 0.95) {
+        skyCol.setHex(0x050510); // Night
+    } else if (gameTime > 0.95 || gameTime < 0.05) {
+        let lerp = gameTime > 0.95 ? (gameTime - 0.95) * 10 : (gameTime + 0.05) * 10;
+        skyCol.lerpColors(new THREE.Color(0xffa07a), new THREE.Color(0x8cb6ff), lerp); // Dawn to Day
+    } else {
+        skyCol.setHex(0x8cb6ff); // Day
     }
-    dragging = false;
-  });
+
+    scene.background.lerp(skyCol, 0.1);
+    scene.fog.color.lerp(skyCol, 0.1);
+
+    document.getElementById('timeUI').innerText = (gameTime > 0.25 && gameTime < 0.75) ? 
+        (gameTime < 0.5 ? "Day" : "Dusk") : 
+        (gameTime > 0.9 ? "Dawn" : "Night");
 }
 
 function startGame(){
@@ -860,8 +1018,8 @@ function startGame(){
   scene=new THREE.Scene(); scene.background=new THREE.Color(0x8cb6ff); scene.fog=new THREE.Fog(0x8cb6ff, 30, RENDER_DIST*16 - 10);
   camera=new THREE.PerspectiveCamera(75,innerWidth/innerHeight,.05,200); camera.rotation.order='YXZ';
 
-  const ambient=new THREE.AmbientLight(0xffffff,.6); scene.add(ambient);
-  const sun=new THREE.DirectionalLight(0xfff5e0,.9);
+  ambient=new THREE.AmbientLight(0xffffff,.6); scene.add(ambient);
+  sun=new THREE.DirectionalLight(0xfff5e0,.9);
   sun.position.set(50,100,50); sun.castShadow=true; sun.shadow.mapSize.set(2048,2048);
   sun.shadow.camera.left=-100;sun.shadow.camera.right=100; sun.shadow.camera.top=100;sun.shadow.camera.bottom=-100;
   sun.shadow.camera.near=1;sun.shadow.camera.far=400; sun.shadow.bias=-.001; scene.add(sun);
@@ -888,7 +1046,7 @@ function startGame(){
     requestAnimationFrame(loop);
     const now=performance.now(), dt=Math.min((now-prev)/1000,.05); prev=now;
 
-    updatePlayer(dt); updateDrops(dt);
+    updatePlayer(dt); updateDrops(dt); updateDayNight(dt);
     
     if(!inUI) { camera.position.set(px,py+PH*.88,pz); camera.rotation.y=yaw; camera.rotation.x=pitch; camera.rotation.z=0; }
     const ld=lookDir(); world.tick(px,pz,ld);
