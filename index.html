@@ -534,10 +534,19 @@ function renderInventoryUI() {
   // Render Craft Grid
   let gridCount = isCraftingTable ? 9 : 4;
   for(let i=0; i<gridCount; i++) cGrid.appendChild(createDOMSlot(craftGrid[i], e => slotClick(e, craftGrid[i])));
-  // Render Craft Out
-  cOut.appendChild(createDOMSlot(craftResult, e => slotClick(e, craftResult, true)).childNodes[0] || '');
-  if(craftResult.count > 1) {
-      const lbl = document.createElement('span'); lbl.className = 'slot-count'; lbl.innerText = craftResult.count; cOut.append(lbl);
+  
+  // Render Craft Out properly without throwing Node errors
+  if (craftResult.id !== AIR && craftResult.count > 0) {
+      const cv = document.createElement('canvas');
+      cv.width = cv.height = 32;
+      drawSlotCanvas(cv, craftResult.id);
+      cOut.appendChild(cv);
+      if (craftResult.count > 1) {
+          const lbl = document.createElement('span');
+          lbl.className = 'slot-count';
+          lbl.innerText = craftResult.count;
+          cOut.appendChild(lbl);
+      }
   }
 
   // Update Cursor Item
@@ -669,9 +678,26 @@ function canHarvest(bId, tId) {
 }
 
 function getMiningSpeed(b, t) {
-  if([W_PICKAXE, S_PICKAXE].includes(t) && [STONE, COAL].includes(b)) return t===W_PICKAXE ? 3 : 6;
-  if([W_AXE, S_AXE].includes(t) && [WOOD, PLANKS, CRAFT_TABLE].includes(b)) return t===W_AXE ? 3 : 6;
-  if([W_SHOVEL, S_SHOVEL].includes(t) && [DIRT, GRASS, SAND, GRAVEL, SNOW].includes(b)) return t===W_SHOVEL ? 3 : 6;
+  let isStone = [STONE, COAL].includes(b);
+  let isWood = [WOOD, PLANKS, CRAFT_TABLE].includes(b);
+  let isDirt = [DIRT, GRASS, SAND, GRAVEL, SNOW].includes(b);
+  
+  if(isStone) {
+      if(t === S_PICKAXE) return 6;
+      if(t === W_PICKAXE) return 3;
+      return 0.15; // Bare hand takes forever on stone
+  }
+  if(isWood) {
+      if(t === S_AXE) return 6;
+      if(t === W_AXE) return 3;
+      return 1; // Wood breaks at normal speed by hand
+  }
+  if(isDirt) {
+      if(t === S_SHOVEL) return 6;
+      if(t === W_SHOVEL) return 3;
+      return 1.5; 
+  }
+  
   return 1;
 }
 
