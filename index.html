@@ -377,7 +377,7 @@ body{background:#000;overflow:hidden;user-select:none;font-family:'Press Start 2
     <div id="splashText" class="splash-text"></div>
   </div>
   <div class="splash-edition">✦ SURVIVAL EDITION ✦</div>
-  <div style="color:#aaffaa;font-size:7px;letter-spacing:2px;margin-bottom:8px;position:relative;z-index:10;text-shadow:1px 1px 0 #000;">v3.1 — Boat · Fishing Rod · Campfire!</div>
+  <div style="color:#aaffaa;font-size:7px;letter-spacing:2px;margin-bottom:8px;position:relative;z-index:10;text-shadow:1px 1px 0 #000;">v3.0 — Minimap · Swimming · Crouching · Torch Glow!</div>
   <div class="splash-menu">
     <button class="mc-btn" id="playBtn">▶ Singleplayer</button>
     <button class="mc-btn" style="opacity:0.5;cursor:not-allowed;">✦ Multiplayer</button>
@@ -464,7 +464,7 @@ body{background:#000;overflow:hidden;user-select:none;font-family:'Press Start 2
 const AIR=0,GRASS=1,DIRT=2,STONE=3,WOOD=4,LEAVES=5,SAND=6,WATER=7,SNOW=8,GRAVEL=9,COAL_ORE=10,
       PLANKS=11, CRAFT_TABLE=12, COBBLESTONE=13, IRON_ORE=14, GOLD_ORE=15, GLASS=16, BRICKS=17,
       OBSIDIAN=18, BOOKSHELF=19, SPONGE=20, TORCH=21, LADDER=22, FENCE=23, DOOR=24, TRAPDOOR=25,
-      TALL_GRASS=26, ROSE=27, DANDELION=28, BED=29, DIAMOND_ORE=30, CAMPFIRE_BLOCK=31;
+      TALL_GRASS=26, ROSE=27, DANDELION=28, BED=29, DIAMOND_ORE=30;
 
 // ITEMS (101+)
 const STICK=101, W_PICKAXE=102, S_PICKAXE=103, W_AXE=104, S_AXE=105, 
@@ -476,14 +476,13 @@ const STICK=101, W_PICKAXE=102, S_PICKAXE=103, W_AXE=104, S_AXE=105,
       BUCKET=124, SHEARS=125, BOW=126, ARROW=127,
       COMPASS=128, CLOCK=129, RAW_BEEF=130, MUTTON=131, CHICKEN_MEAT=132,
       WOOL=133, DIAMOND=134, D_PICKAXE=135, D_AXE=136, D_SHOVEL=137, D_SWORD=138, D_HOE=139,
-      ROTTEN_FLESH=140, BONE=141, SPIDER_EYE=142, XP_BOTTLE=143,
-      BOAT=144, FISHING_ROD=145, RAW_FISH=146, CAMPFIRE=147;
+      ROTTEN_FLESH=140, BONE=141, SPIDER_EYE=142, XP_BOTTLE=143;
 
 const BNAMES={
   0:'Air', 1:'Grass Block', 2:'Dirt', 3:'Stone', 4:'Oak Log', 5:'Oak Leaves', 6:'Sand', 
   7:'Water', 8:'Snow Block', 9:'Gravel', 10:'Coal Ore', 11:'Oak Planks', 12:'Crafting Table',
   13:'Cobblestone', 14:'Iron Ore', 15:'Gold Ore', 16:'Glass', 17:'Bricks', 18:'Obsidian', 19:'Bookshelf', 20:'Sponge', 21:'Torch',
-  22:'Ladder', 23:'Fence', 24:'Door', 25:'Trapdoor', 26:'Tall Grass', 27:'Rose', 28:'Dandelion', 29:'Bed', 30:'Diamond Ore', 31:'Campfire',
+  22:'Ladder', 23:'Fence', 24:'Door', 25:'Trapdoor', 26:'Tall Grass', 27:'Rose', 28:'Dandelion', 29:'Bed', 30:'Diamond Ore',
   101:'Stick', 102:'Wooden Pickaxe', 103:'Stone Pickaxe', 104:'Wooden Axe', 105:'Stone Axe', 
   106:'Wooden Shovel', 107:'Stone Shovel', 108:'Wooden Sword', 109:'Stone Sword',
   110:'Coal', 111:'Iron Ingot', 112:'Gold Ingot',
@@ -493,8 +492,7 @@ const BNAMES={
   124:'Bucket', 125:'Shears', 126:'Bow', 127:'Arrow', 128:'Compass', 129:'Clock',
   130:'Raw Beef', 131:'Raw Mutton', 132:'Raw Chicken',
   133:'Wool', 134:'Diamond', 135:'Diamond Pickaxe', 136:'Diamond Axe', 137:'Diamond Shovel', 138:'Diamond Sword', 139:'Diamond Hoe',
-  140:'Rotten Flesh', 141:'Bone', 142:'Spider Eye', 143:'XP Bottle',
-  144:'Boat', 145:'Fishing Rod', 146:'Raw Fish', 147:'Campfire'
+  140:'Rotten Flesh', 141:'Bone', 142:'Spider Eye', 143:'XP Bottle'
 };
 const SEA=12, CH=64, CS=16;
 
@@ -505,7 +503,7 @@ HARDNESS[STONE]=1.5; HARDNESS[COBBLESTONE]=2.0; HARDNESS[DIRT]=0.5; HARDNESS[GRA
 HARDNESS[SAND]=0.5; HARDNESS[GRAVEL]=0.6; HARDNESS[WOOD]=2.0; HARDNESS[PLANKS]=2.0;
 HARDNESS[LEAVES]=0.2; HARDNESS[GLASS]=0.3; HARDNESS[OBSIDIAN]=50.0; HARDNESS[IRON_ORE]=3.0; HARDNESS[GOLD_ORE]=3.0; HARDNESS[DIAMOND_ORE]=3.0;
 HARDNESS[TALL_GRASS]=0.0; HARDNESS[ROSE]=0.0; HARDNESS[DANDELION]=0.0;
-HARDNESS[BED]=0.2; HARDNESS[CAMPFIRE_BLOCK]=1.0;
+HARDNESS[BED]=0.2;
 
 /* ══════════════════════════════════════════════════════════
    TEXTURE & ICON GENERATOR
@@ -549,17 +547,6 @@ function getTexSponge() { return genGridTex((x,y) => { let v=0.8+Math.random()*0
 function getTexTorch() { return genGridTex((x,y) => { if(x<7||x>8||y<4) return {a:0}; if(y<7) return {r:255,g:200,b:50}; return {r:100,g:60,b:30}; }); }
 function getTexWool() { return genGridTex((x,y) => { let v = 0.85 + Math.random()*0.15; return {r:~~(240*v), g:~~(240*v), b:~~(245*v)}; }); }
 function getTexBedTop() { return genGridTex((x,y) => { if(y<6) return {r:240,g:240,b:240}; return {r:200,g:40,b:40}; }); }
-function getTexCampfire() { return genGridTex((x,y) => {
-  // Log base: dark brown at bottom half
-  if(y>=10) { let v=0.7+Math.random()*0.3; return {r:~~(90*v),g:~~(55*v),b:~~(25*v)}; }
-  // Flame: orange/yellow gradient
-  let dist = Math.abs(x-7.5)/8; 
-  let v = 0.8+Math.random()*0.4;
-  if(y<5 && dist<0.3) return {r:255,g:~~(240*v),b:~~(50*v)};
-  if(y<8 && dist<0.5) return {r:255,g:~~(140*v),b:0};
-  if(y<10 && dist<0.65) return {r:~~(200*v),g:~~(80*v),b:0};
-  return {r:~~(50*v),g:~~(30*v),b:~~(10*v)};
-});}
 
 /* Flora Textures */
 function getTexTallGrass() { return genGridTex((x,y) => {
@@ -594,6 +581,11 @@ function getTexCrack(stage) {
 function getTexMob(type, part) {
     // Legacy single-face version - returns a single canvas for simple use
     return genGridTex((x,y) => {
+        if(type === 'villager') {
+            // Brown robe body, peach face
+            if(part==='body') { let v=0.85+Math.random()*0.15; return {r:~~(139*v),g:~~(90*v),b:~~(43*v)}; }
+            if(part==='head') { let v=0.9+Math.random()*0.1; return {r:~~(255*v),g:~~(213*v),b:~~(185*v)}; }
+        }
         if(type === 'cow') {
             let v=0.85+Math.random()*0.15;
             if(part==='head') {
@@ -721,6 +713,77 @@ function getTexMobFace(type, part, faceIdx) {
             if(part==='body'){let v=0.65+Math.random()*0.35;if(Math.random()<0.08)return{r:~~(50*v),g:~~(30*v),b:~~(50*v)};return{r:~~(26*v),g:~~(18*v),b:~~(26*v)};}
             if(part==='head'){let v=0.65+Math.random()*0.35;if(faceIdx===4){let eyes=[[3,5],[6,5],[9,5],[12,5],[3,9],[6,9],[9,9],[12,9]];for(let[ex,ey]of eyes)if(x===ex&&y===ey)return{r:255,g:0,b:0};return{r:~~(26*v),g:~~(18*v),b:~~(26*v)};}return{r:~~(26*v),g:~~(18*v),b:~~(26*v)};}
         }
+        // ─── VILLAGER ───
+        if(type==='villager') {
+            let v=0.88+Math.random()*0.12;
+            if(part==='head') {
+                if(faceIdx===4) {
+                    // Rich peach/tan skin base
+                    let sr=~~(252*v), sg=~~(205*v), sb=~~(165*v);
+                    // Large Minecraft nose — wide and prominent
+                    if(x>=5&&x<=10&&y>=7&&y<=11) return {r:~~(215*v),g:~~(158*v),b:~~(118*v)};
+                    if(x>=6&&x<=9&&y>=6&&y<=12) return {r:~~(220*v),g:~~(163*v),b:~~(123*v)};
+                    // Eyes — dark navy/brown
+                    if(y>=4&&y<=7&&x>=2&&x<=4) return {r:30,g:30,b:80};
+                    if(y>=4&&y<=7&&x>=12&&x<=14) return {r:30,g:30,b:80};
+                    // Eye shine
+                    if(y===4&&x===2) return {r:200,g:200,b:255};
+                    if(y===4&&x===12) return {r:200,g:200,b:255};
+                    // Thick brows
+                    if(y===3&&x>=2&&x<=4) return {r:~~(90*v),g:~~(60*v),b:~~(25*v)};
+                    if(y===3&&x>=12&&x<=14) return {r:~~(90*v),g:~~(60*v),b:~~(25*v)};
+                    // Smile line
+                    if(y===12&&x>=5&&x<=7) return {r:~~(190*v),g:~~(130*v),b:~~(95*v)};
+                    if(y===12&&x>=9&&x<=11) return {r:~~(190*v),g:~~(130*v),b:~~(95*v)};
+                    // Cheek blush
+                    if(y>=9&&y<=10&&x>=1&&x<=2) return {r:~~(240*v),g:~~(165*v),b:~~(145*v)};
+                    if(y>=9&&y<=10&&x>=13&&x<=14) return {r:~~(240*v),g:~~(165*v),b:~~(145*v)};
+                    return {r:sr,g:sg,b:sb};
+                }
+                // Top: brown hair with parting
+                if(faceIdx===2) {
+                    if(x>=6&&x<=9) return {r:~~(140*v),g:~~(90*v),b:~~(45*v)};
+                    return {r:~~(110*v),g:~~(70*v),b:~~(32*v)};
+                }
+                // Sides: layered brown hair
+                if(faceIdx===0||faceIdx===1) {
+                    if(y<=3) return {r:~~(110*v),g:~~(70*v),b:~~(32*v)};
+                    return {r:~~(252*v),g:~~(205*v),b:~~(165*v)};
+                }
+                // Back of head: all hair
+                return {r:~~(110*v),g:~~(70*v),b:~~(32*v)};
+            }
+            if(part==='body') {
+                if(faceIdx===4) {
+                    // Front: green collar + brown robe + belt detail
+                    if(y<=2) return {r:~~(255*v),g:~~(205*v),b:~~(165*v)}; // neck skin
+                    if(y>=3&&y<=5) return {r:~~(78*v),g:~~(115*v),b:~~(48*v)}; // green shirt collar
+                    if(y===8||y===9) return {r:~~(80*v),g:~~(50*v),b:~~(20*v)}; // belt
+                    if(y>=10) return {r:~~(100*v),g:~~(65*v),b:~~(28*v)}; // darker robe hem
+                    return {r:~~(139*v),g:~~(90*v),b:~~(43*v)};
+                }
+                if(faceIdx===5) {
+                    // Back: solid brown robe
+                    if(y<=5) return {r:~~(78*v),g:~~(115*v),b:~~(48*v)};
+                    return {r:~~(128*v),g:~~(82*v),b:~~(38*v)};
+                }
+                // Sides
+                return {r:~~(115*v),g:~~(74*v),b:~~(34*v)};
+            }
+            if(part==='arm') {
+                if(faceIdx===4) {
+                    if(y>=12) return {r:~~(252*v),g:~~(205*v),b:~~(165*v)}; // hand skin
+                    if(y<=2) return {r:~~(78*v),g:~~(115*v),b:~~(48*v)};
+                    return {r:~~(128*v),g:~~(82*v),b:~~(38*v)};
+                }
+                return {r:~~(115*v),g:~~(74*v),b:~~(34*v)};
+            }
+            if(part==='leg') {
+                // Dark brown trousers with lighter foot
+                if(y>=12) return {r:~~(80*v),g:~~(52*v),b:~~(24*v)};
+                return {r:~~(105*v),g:~~(68*v),b:~~(32*v)};
+            }
+        }
         return {r:255,g:0,b:255};
     });
 }
@@ -776,43 +839,6 @@ function drawItemIcon(ctx, id) {
   if(id === ARROW) { ctx.fillStyle='#6e4a2c'; ctx.fillRect(14,10,4,16); ctx.fillStyle='#aaa'; ctx.fillRect(14,6,4,4); ctx.fillStyle='#fff'; ctx.fillRect(12,26,8,4); return; }
   if(id === COMPASS) { ctx.fillStyle='#aaa'; ctx.beginPath(); ctx.arc(16,16,10,0,Math.PI*2); ctx.fill(); ctx.fillStyle='#d00'; ctx.fillRect(15,10,2,6); ctx.fillStyle='#fff'; ctx.fillRect(15,16,2,6); return; }
   if(id === CLOCK) { ctx.fillStyle='#ffd700'; ctx.beginPath(); ctx.arc(16,16,10,0,Math.PI*2); ctx.fill(); ctx.fillStyle='#44f'; ctx.beginPath(); ctx.arc(16,16,6,0,Math.PI*2); ctx.fill(); return; }
-  if(id === BOAT) {
-    // Hull shape
-    ctx.fillStyle='#a0784a'; ctx.fillRect(4,18,24,6); ctx.fillRect(6,24,20,4);
-    ctx.fillStyle='#c89a5a'; ctx.fillRect(4,16,24,3);
-    // Inner wood planks
-    ctx.fillStyle='#8a6030'; ctx.fillRect(6,18,20,2); ctx.fillRect(6,21,20,1);
-    // Bow/stern
-    ctx.fillStyle='#7a5020'; ctx.fillRect(4,18,2,10); ctx.fillRect(26,18,2,10);
-    return;
-  }
-  if(id === FISHING_ROD) {
-    // Rod: diagonal thin line
-    ctx.fillStyle='#6e4a2c';
-    for(let i=0;i<10;i++) ctx.fillRect(4+i*2,4+i,2,2);
-    // Line: thin gray
-    ctx.fillStyle='#cccccc';
-    ctx.fillRect(22,14,1,10); ctx.fillRect(21,24,4,1);
-    // Hook
-    ctx.fillStyle='#aaa';
-    ctx.fillRect(24,22,2,4); ctx.fillRect(22,26,4,1);
-    return;
-  }
-  if(id === RAW_FISH) {
-    ctx.fillStyle='#88aadd'; ctx.beginPath(); ctx.ellipse(16,16,10,5,0.3,0,Math.PI*2); ctx.fill();
-    ctx.fillStyle='#6699cc'; ctx.fillRect(6,14,4,4);
-    ctx.fillStyle='#222'; ctx.beginPath(); ctx.arc(22,14,2,0,Math.PI*2); ctx.fill();
-    return;
-  }
-  if(id === CAMPFIRE) {
-    // Logs
-    ctx.fillStyle='#7a4a1a'; ctx.fillRect(4,20,24,6); ctx.fillRect(10,20,4,8);
-    // Flames
-    ctx.fillStyle='#ff8800'; ctx.fillRect(10,10,12,12);
-    ctx.fillStyle='#ffcc00'; ctx.fillRect(13,6,6,10);
-    ctx.fillStyle='#ff4400'; ctx.fillRect(8,14,4,6); ctx.fillRect(20,14,4,6);
-    return;
-  }
 
   if(id >= I_HELMET && id <= I_BOOTS) {
       ctx.fillStyle = '#ddd';
@@ -869,7 +895,6 @@ function buildMats(){
 
   MATS[WOOL]=M(getTexWool());
   MATS[BED]=[M(texWoodSide),M(texWoodSide),M(getTexBedTop()),M(texWoodTop),M(texWoodSide),M(texWoodSide)];
-  MATS[CAMPFIRE_BLOCK]=M(getTexCampfire());
 
   MATS[TALL_GRASS] = M(getTexTallGrass(),true,1);
   MATS[ROSE] = M(getTexRose(),true,1);
@@ -894,6 +919,47 @@ function octaveNoise(x,z,octs=6){
   let v=0,a=1,f=1,m=0; for(let i=0;i<octs;i++){v+=a*smoothNoise(x*f,z*f);m+=a;a*=.5;f*=1.9;} return v/m;
 }
 function treeSeed(wx,wz){return hash2(wx*7.3+13,wz*5.7+29);}
+
+/* ══════════════════════════════════════════════════════════
+   VILLAGE GENERATION
+══════════════════════════════════════════════════════════ */
+function getVillageCenter(vgx, vgz) {
+  const VCELL = 160;
+  let wx = vgx * VCELL + Math.floor(hash2(vgx*3.1, vgz*7.3)*80) + 40;
+  let wz = vgz * VCELL + Math.floor(hash2(vgx*5.7, vgz*2.9)*80) + 40;
+  let chance = hash2(vgx*13.7, vgz*19.3);
+  return chance > 0.65 ? {wx, wz} : null;
+}
+
+function placeVillage(chunk, villageWX, villageWZ, groundY) {
+  const cx=chunk.cx, cz2=chunk.cz, CSz=CS;
+  function setW(wx,wy,wz,block){let lx=wx-cx*CSz,lz=wz-cz2*CSz;if(lx<0||lx>=CSz||lz<0||lz>=CSz||wy<0||wy>=CH)return;chunk.set(lx,wy,lz,block);}
+  const vx=villageWX, vz=villageWZ, gy=groundY;
+  // Dirt paths
+  for(let d=-20;d<=20;d++){setW(vx+d,gy,vz,DIRT);setW(vx,gy,vz+d,DIRT);setW(vx+d,gy+1,vz,AIR);setW(vx,gy+1,vz+d,AIR);}
+  // Well
+  for(let dx=-1;dx<=1;dx++)for(let dz=-1;dz<=1;dz++){setW(vx+dx,gy,vz+dz,COBBLESTONE);setW(vx+dx,gy+1,vz+dz,dx===0&&dz===0?WATER:COBBLESTONE);}
+  for(let dy=2;dy<=3;dy++){setW(vx-1,gy+dy,vz-1,COBBLESTONE);setW(vx+1,gy+dy,vz-1,COBBLESTONE);setW(vx-1,gy+dy,vz+1,COBBLESTONE);setW(vx+1,gy+dy,vz+1,COBBLESTONE);}
+  for(let ppx=-1;ppx<=1;ppx++)for(let ppz=-1;ppz<=1;ppz++)setW(vx+ppx,gy+4,vz+ppz,PLANKS);
+  // Houses
+  const houseOffsets=[{hx:9,hz:6},{hx:-9,hz:6},{hx:9,hz:-9},{hx:-9,hz:-9},{hx:0,hz:14}];
+  houseOffsets.forEach((ho,hi)=>{
+    if(hash2(vx*(hi+1)*2.3,vz*(hi+1)*1.7)<0.35)return;
+    let hx=vx+ho.hx,hz=vz+ho.hz,W=5,D=6,H=4;
+    for(let dx=0;dx<W;dx++)for(let dy=0;dy<H+2;dy++)for(let dz=0;dz<D;dz++)setW(hx+dx,gy+dy,hz+dz,AIR);
+    for(let dx=0;dx<W;dx++)for(let dz=0;dz<D;dz++)setW(hx+dx,gy,hz+dz,PLANKS);
+    for(let dx=0;dx<W;dx++)for(let dz=0;dz<D;dz++){let isEdge=dx===0||dx===W-1||dz===0||dz===D-1;if(!isEdge)continue;setW(hx+dx,gy+1,hz+dz,COBBLESTONE);for(let dy=2;dy<H;dy++)setW(hx+dx,gy+dy,hz+dz,PLANKS);}
+    for(let dx=-1;dx<=W;dx++)for(let dz=-1;dz<=D;dz++)setW(hx+dx,gy+H,hz+dz,PLANKS);
+    setW(hx+Math.floor(W/2),gy+1,hz,DOOR);
+    setW(hx+1,gy+2,hz,GLASS);setW(hx+W-2,gy+2,hz,GLASS);
+    setW(hx+1,gy+2,hz+1,TORCH);setW(hx+W-2,gy+2,hz+D-2,TORCH);
+    setW(hx+Math.floor(W/2)-1,gy+2,hz-1,TORCH);setW(hx+Math.floor(W/2)+1,gy+2,hz-1,TORCH);
+  });
+  // Lampposts
+  [[vx+8,vz],[vx-8,vz],[vx,vz+8],[vx,vz-8],[vx+16,vz],[vx-16,vz],[vx,vz+16],[vx,vz-16]].forEach(([lx,lz])=>{
+    for(let dy=1;dy<=4;dy++)setW(lx,gy+dy,lz,FENCE);setW(lx,gy+5,lz,TORCH);
+  });
+}
 
 function getTerrain(wx, wz) {
     let temp = octaveNoise(wx * 0.04, wz * 0.04, 3);
@@ -1005,8 +1071,27 @@ class Chunk{
         }
       }
     }
-  }
-  
+
+    // ── VILLAGE GENERATION ──
+    let vCELL = 160;
+    let chunkWX0 = this.cx * CS, chunkWZ0 = this.cz * CS;
+    let vcx0 = Math.floor(chunkWX0 / vCELL) - 1;
+    let vcz0 = Math.floor(chunkWZ0 / vCELL) - 1;
+    let _villagesPlaced = new Set();
+    for(let dvx=0;dvx<=2;dvx++) for(let dvz=0;dvz<=2;dvz++) {
+      let v = getVillageCenter(vcx0+dvx, vcz0+dvz);
+      if(!v) continue;
+      let vkey = v.wx+','+v.wz;
+      if(_villagesPlaced.has(vkey)) continue;
+      let dx2=v.wx-chunkWX0, dz2=v.wz-chunkWZ0;
+      if(dx2<-50||dx2>CS+50||dz2<-50||dz2>CS+50) continue;
+      let {h:vh, type:vtype, isRiver:vRiver} = getTerrain(v.wx, v.wz);
+      if(vtype==='ocean'||vtype==='desert'||vtype==='snow'||vRiver||vh<=SEA) continue;
+      _villagesPlaced.add(vkey);
+      placeVillage(this, v.wx, v.wz, vh-1);
+    }
+  } // end _generate
+
   _buildMesh(){
     this.dispose();
     const bufs=new Map(); const getBuf=key=>{ if(!bufs.has(key)) bufs.set(key,{pos:[],nor:[],uvs:[],idx:[]}); return bufs.get(key); };
@@ -1178,15 +1263,7 @@ const RECIPES = [
   { out: DOOR, count: 1, shape: [[PLANKS,PLANKS],[PLANKS,PLANKS],[PLANKS,PLANKS]] },
   { out: TRAPDOOR, count: 2, shape: [[PLANKS,PLANKS,PLANKS],[PLANKS,PLANKS,PLANKS]] },
   { out: COMPASS, count: 1, shape: [[AIR,IRON_INGOT,AIR],[IRON_INGOT,IRON_INGOT,IRON_INGOT],[AIR,IRON_INGOT,AIR]] },
-  { out: CLOCK, count: 1, shape: [[AIR,GOLD_INGOT,AIR],[GOLD_INGOT,GOLD_INGOT,GOLD_INGOT],[AIR,GOLD_INGOT,AIR]] },
-
-  // ── NEW FEATURES ──
-  // Boat: 5 planks (like Minecraft: bottom row + left + right middle)
-  { out: BOAT, count: 1, shape: [[PLANKS,AIR,PLANKS],[PLANKS,PLANKS,PLANKS]] },
-  // Fishing Rod: sticks diagonal + string (wool)
-  { out: FISHING_ROD, count: 1, shape: [[AIR,AIR,STICK],[AIR,STICK,WOOL],[STICK,AIR,AIR]] },
-  // Campfire: sticks + coal + logs
-  { out: CAMPFIRE, count: 1, shape: [[STICK,AIR,STICK],[STICK,COAL,STICK],[WOOD,WOOD,WOOD]] }
+  { out: CLOCK, count: 1, shape: [[AIR,GOLD_INGOT,AIR],[GOLD_INGOT,GOLD_INGOT,GOLD_INGOT],[AIR,GOLD_INGOT,AIR]] }
 ];
 
 function toggleUI(show, isTable = false) {
@@ -1952,6 +2029,361 @@ class Mob {
 
 let mobs = [];
 let lastMobSpawn = 0;
+
+/* ══════════════════════════════════════════════════════════
+   VILLAGER — Minecraft-accurate model + animations
+══════════════════════════════════════════════════════════ */
+let villagers = [];
+
+class Villager {
+    constructor(x, y, z, profession) {
+        this.profession = profession || ['farmer','librarian','blacksmith','butcher','priest'][Math.floor(Math.random()*5)];
+        this.mesh = new THREE.Group();
+        this.animTime = Math.random() * Math.PI * 2;
+        this.isMoving = false;
+        this.targetYaw = Math.random() * Math.PI * 2;
+        this.stateTime = Math.random() * 3;
+        this.vx = 0; this.vz = 0; this.vy = 0;
+        this.dead = false;
+        this._soundTimer = 5 + Math.random() * 10;
+        // Idle sub-states: 'wander', 'idle', 'look'
+        this._idleState = 'idle';
+        this._idleTimer = 2 + Math.random() * 4;
+        // Arm fold animation target
+        this._armFold = 1.3; // folded by default (Minecraft villagers hold arms up/folded)
+        this._tradeTimer = 0; // how long showing trade gesture
+
+        // ── EXACT MINECRAFT PROPORTIONS ──
+        // Body: 8×12×4 pixels scaled → 0.5×0.75×0.25 blocks
+        const SCALE = 1/16;
+        const bW=8*SCALE*2, bH=12*SCALE*2, bD=4*SCALE*2;   // body
+        const hW=8*SCALE*2, hH=10*SCALE*2, hD=8*SCALE*2;   // head (big, square)
+        const aW=4*SCALE*2, aH=12*SCALE*2, aD=4*SCALE*2;   // arms
+        const lW=4*SCALE*2, lH=12*SCALE*2, lD=4*SCALE*2;   // legs
+        const bodyY = lH + bH*0.5;  // body center Y above ground
+
+        // ── MATERIALS per face ──
+        const mkFaceMats = (part) => {
+            let mats = [];
+            for(let fi=0;fi<6;fi++){
+                mats.push(new THREE.MeshLambertMaterial({
+                    map: canvasToTex(getTexMobFace('villager', part, fi)),
+                    transparent: false
+                }));
+            }
+            return mats;
+        };
+
+        // ── BODY ──
+        this.bodyMesh = new THREE.Mesh(new THREE.BoxGeometry(bW,bH,bD), mkFaceMats('body'));
+        this.bodyMesh.position.y = bodyY;
+        this.bodyMesh.castShadow = true;
+        this.mesh.add(this.bodyMesh);
+
+        // ── HEAD (sits on top of body, slightly forward like MC) ──
+        this.headPivot = new THREE.Group();
+        this.headPivot.position.set(0, bodyY + bH*0.5 + hH*0.05, bD*0.05);
+        this.mesh.add(this.headPivot);
+
+        this.headMesh = new THREE.Mesh(new THREE.BoxGeometry(hW,hH,hD), mkFaceMats('head'));
+        this.headMesh.position.y = hH*0.5;
+        this.headMesh.castShadow = true;
+        this.headPivot.add(this.headMesh);
+
+        // ── BIG VILLAGER NOSE (iconic!) ──
+        const noseMat = new THREE.MeshLambertMaterial({color: 0xd09878});
+        const noseMesh = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.10, 0.10), noseMat);
+        noseMesh.position.set(0, hH*0.5 - 0.18, hD*0.5 + 0.04);
+        this.headMesh.add(noseMesh);
+
+        // Profession hat layer (slightly larger than head, sits on top)
+        const hatColors = {
+            farmer:     0xa0522d,  // saddle brown
+            librarian:  0x1a1a2e,  // deep navy
+            blacksmith: 0x2f2f2f,  // charcoal
+            butcher:    0x8b0000,  // dark red
+            priest:     0x6b0ac9,  // rich purple
+        };
+        const hatCol = hatColors[this.profession] || 0x5a3010;
+        const hatMat = new THREE.MeshLambertMaterial({color: hatCol});
+        // Hat brim — wide for visual impact
+        const hatBrim = new THREE.Mesh(new THREE.BoxGeometry(hW*1.4, 0.06, hD*1.4), hatMat);
+        hatBrim.position.y = hH + 0.03;
+        this.headMesh.add(hatBrim);
+        // Hat crown
+        const hatTop = new THREE.Mesh(new THREE.BoxGeometry(hW*0.88, 0.28, hD*0.88), hatMat);
+        hatTop.position.y = hH + 0.2;
+        this.headMesh.add(hatTop);
+        // Hat band accent — gold/white stripe
+        const bandColors = {farmer:0xf5d680, librarian:0x8888cc, blacksmith:0x888888, butcher:0xff8888, priest:0xdd99ff};
+        const bandMat = new THREE.MeshLambertMaterial({color: bandColors[this.profession]||0xdddddd});
+        const hatBand = new THREE.Mesh(new THREE.BoxGeometry(hW*0.90, 0.05, hD*0.90), bandMat);
+        hatBand.position.y = hH + 0.07;
+        this.headMesh.add(hatBand);
+
+        // ── ARMS (villager holds arms slightly out and folded — iconic MC look) ──
+        this.arms = [];
+        for(let side=0;side<2;side++){
+            let pivot = new THREE.Group();
+            // Arm pivot at shoulder level
+            pivot.position.set((side===0?1:-1)*(bW*0.5 + aW*0.5), bodyY + bH*0.4, 0);
+            let armMesh = new THREE.Mesh(new THREE.BoxGeometry(aW,aH,aD), mkFaceMats('arm'));
+            armMesh.position.y = -aH*0.5;
+            armMesh.castShadow = true;
+            pivot.add(armMesh);
+            this.mesh.add(pivot);
+            this.arms.push(pivot);
+        }
+        // Start arms in folded position (rotated up ~75°)
+        this.arms[0].rotation.x = -1.3;
+        this.arms[1].rotation.x = -1.3;
+
+        // ── LEGS ──
+        this.legs = [];
+        const legColors = {farmer:0x5a3a1a, librarian:0x222244, blacksmith:0x222222, butcher:0x5a1a1a, priest:0x330066};
+        const legMat = new THREE.MeshLambertMaterial({color: legColors[this.profession] || 0x5a3010});
+        for(let side=0;side<2;side++){
+            let pivot = new THREE.Group();
+            pivot.position.set((side===0?1:-1)*lW*0.5, lH, 0);
+            let legMesh = new THREE.Mesh(new THREE.BoxGeometry(lW,lH,lD), legMat);
+            legMesh.position.y = -lH*0.5;
+            legMesh.castShadow = true;
+            pivot.add(legMesh);
+            this.mesh.add(pivot);
+            this.legs.push(pivot);
+        }
+
+        this.mesh.position.set(x, y, z);
+        this._bodyY = bodyY;
+        this._bH = bH; this._hH = hH; this._aH = aH; this._lH = lH;
+        scene.add(this.mesh);
+
+        // ── NAME TAG ──
+        this._nameEl = document.createElement('div');
+        this._nameEl.style.cssText = 'position:fixed;color:#fff;font-size:6px;font-family:"Press Start 2P",monospace;text-shadow:1px 1px 0 #000,0 0 4px #000;pointer-events:none;z-index:300;text-align:center;background:rgba(0,0,0,0.45);padding:2px 5px;white-space:nowrap;display:none;';
+        this._nameEl.textContent = this.profession.charAt(0).toUpperCase() + this.profession.slice(1);
+        document.getElementById('ui').appendChild(this._nameEl);
+    }
+
+    update(dt) {
+        if(this.dead) return;
+
+        const distToPlayer = Math.hypot(px - this.mesh.position.x, pz - this.mesh.position.z);
+
+        // ── IDLE STATE MACHINE ──
+        this._idleTimer -= dt;
+        if(this._idleTimer <= 0) {
+            const roll = Math.random();
+            if(roll < 0.35) {
+                this._idleState = 'wander';
+                this._idleTimer = 2 + Math.random() * 3;
+                this.targetYaw = Math.random() * Math.PI * 2;
+                this.isMoving = true;
+            } else if(roll < 0.65) {
+                this._idleState = 'look';  // turn head toward player or random direction
+                this._idleTimer = 1 + Math.random() * 2;
+                this.isMoving = false;
+            } else {
+                this._idleState = 'idle';
+                this._idleTimer = 1.5 + Math.random() * 3;
+                this.isMoving = false;
+            }
+        }
+        if(this._idleState !== 'wander') this.isMoving = false;
+
+        // ── FLEE from hostile mobs at night ──
+        const isNight = gameTime > 0.55 && gameTime < 0.95;
+        if(isNight) {
+            let closestHostile = null, closestDist = 999;
+            mobs.forEach(m => {
+                if(!m.hostile || m.dead) return;
+                let d = Math.hypot(this.mesh.position.x - m.mesh.position.x, this.mesh.position.z - m.mesh.position.z);
+                if(d < closestDist) { closestDist = d; closestHostile = m; }
+            });
+            if(closestHostile && closestDist < 16) {
+                // Flee away from hostile mob
+                let fx = this.mesh.position.x - closestHostile.mesh.position.x;
+                let fz = this.mesh.position.z - closestHostile.mesh.position.z;
+                this.targetYaw = Math.atan2(fx, fz);
+                this.isMoving = true;
+                this._idleState = 'flee';
+            }
+        }
+
+        // ── TRADE GESTURE when player is close ──
+        if(distToPlayer < 3) {
+            this._tradeTimer = 0.8;
+        }
+        this._tradeTimer = Math.max(0, this._tradeTimer - dt);
+
+        // ── ROTATION ──
+        let diff = this.targetYaw - this.mesh.rotation.y;
+        while(diff < -Math.PI) diff += Math.PI*2;
+        while(diff > Math.PI) diff -= Math.PI*2;
+        this.mesh.rotation.y += diff * dt * 3;
+
+        // ── MOVEMENT ──
+        const speed = this._idleState === 'flee' ? 3.5 : 1.4;
+        if(this.isMoving) {
+            this.vx = Math.sin(this.mesh.rotation.y) * speed;
+            this.vz = Math.cos(this.mesh.rotation.y) * speed;
+        } else {
+            this.vx *= 0.8; this.vz *= 0.8;
+        }
+
+        // Gravity
+        this.vy -= GRAVITY * dt;
+        let nx = this.mesh.position.x + this.vx * dt;
+        let nz = this.mesh.position.z + this.vz * dt;
+        let ny = this.mesh.position.y + this.vy * dt;
+
+        // Collision
+        const hw = 0.28, ht = 1.95;
+        if(!entityBlocked(world, nx, this.mesh.position.y, this.mesh.position.z, hw, ht)) this.mesh.position.x = nx;
+        else this.vx = 0;
+        if(!entityBlocked(world, this.mesh.position.x, this.mesh.position.y, nz, hw, ht)) this.mesh.position.z = nz;
+        else this.vz = 0;
+        if(!entityBlocked(world, this.mesh.position.x, ny, this.mesh.position.z, hw, ht)) {
+            this.mesh.position.y = ny;
+        } else {
+            if(this.vy < 0) this.mesh.position.y = Math.floor(this.mesh.position.y);
+            this.vy = 0;
+        }
+
+        // ── ANIMATIONS ──
+        this.animTime += dt * (this.isMoving ? 5 : 0.6);
+        const swing = Math.sin(this.animTime) * (this.isMoving ? 0.42 : 0.04);
+
+        // Legs swing when walking
+        if(this.legs[0]) this.legs[0].rotation.x =  swing;
+        if(this.legs[1]) this.legs[1].rotation.x = -swing;
+
+        // ── ICONIC VILLAGER ARM FOLD ANIMATION ──
+        // Default: arms folded up at ~75° (1.3 rad). When trading/talking: one arm gestures
+        const targetFold = this._tradeTimer > 0 ? 0.6 : 1.3;
+        this._armFold += (targetFold - this._armFold) * dt * 4;
+
+        if(this.arms[0] && this.arms[1]) {
+            if(this.isMoving) {
+                // Walking: arms swing slightly but stay partially folded
+                this.arms[0].rotation.x = -this._armFold + swing * 0.4;
+                this.arms[1].rotation.x = -this._armFold - swing * 0.4;
+                this.arms[0].rotation.z = 0.1;
+                this.arms[1].rotation.z = -0.1;
+            } else if(this._tradeTimer > 0) {
+                // Trade gesture: right arm waves
+                this.arms[0].rotation.x = -0.5 + Math.sin(this.animTime * 3) * 0.3;
+                this.arms[1].rotation.x = -this._armFold;
+                this.arms[0].rotation.z = -0.2 + Math.sin(this.animTime * 2) * 0.1;
+            } else {
+                // Idle: classic folded arms
+                this.arms[0].rotation.x = -this._armFold;
+                this.arms[1].rotation.x = -this._armFold;
+                // Tiny idle sway
+                this.arms[0].rotation.z =  0.08 + Math.sin(this.animTime * 0.8) * 0.03;
+                this.arms[1].rotation.z = -0.08 - Math.sin(this.animTime * 0.8) * 0.03;
+            }
+        }
+
+        // ── HEAD LOOK ──
+        if(distToPlayer < 12) {
+            // Look at player
+            let targetYaw2 = Math.atan2(px - this.mesh.position.x, pz - this.mesh.position.z) - this.mesh.rotation.y;
+            while(targetYaw2 < -Math.PI) targetYaw2 += Math.PI*2;
+            while(targetYaw2 > Math.PI) targetYaw2 -= Math.PI*2;
+            targetYaw2 = Math.max(-0.9, Math.min(0.9, targetYaw2));
+            this.headPivot.rotation.y += (targetYaw2 - this.headPivot.rotation.y) * dt * 5;
+            // Pitch toward player
+            let tPitch = Math.atan2(-(py - this.mesh.position.y - this._bodyY), Math.max(1, distToPlayer));
+            tPitch = Math.max(-0.4, Math.min(0.5, tPitch));
+            this.headPivot.rotation.x += (tPitch - this.headPivot.rotation.x) * dt * 4;
+        } else {
+            // Random idle head bob
+            let idleYaw = Math.sin(this.animTime * 0.4) * 0.25;
+            this.headPivot.rotation.y += (idleYaw - this.headPivot.rotation.y) * dt * 2;
+            this.headPivot.rotation.x += (0 - this.headPivot.rotation.x) * dt * 2;
+        }
+
+        // Body bob while walking
+        if(this.bodyMesh) {
+            this.bodyMesh.position.y = this._bodyY + (this.isMoving ? Math.abs(Math.sin(this.animTime)) * 0.04 : 0);
+        }
+
+        // ── NAME TAG ──
+        if(this._nameEl && camera) {
+            if(distToPlayer < 6) {
+                let worldPos = new THREE.Vector3(
+                    this.mesh.position.x,
+                    this.mesh.position.y + this._bodyY + this._bH*0.5 + this._hH + 0.3,
+                    this.mesh.position.z
+                );
+                let s = worldPos.clone().project(camera);
+                if(s.z <= 1) {
+                    let x2d = (s.x*0.5+0.5)*window.innerWidth;
+                    let y2d = (-s.y*0.5+0.5)*window.innerHeight;
+                    this._nameEl.style.display = 'block';
+                    this._nameEl.style.left = (x2d - 40) + 'px';
+                    this._nameEl.style.top  = (y2d - 8) + 'px';
+                } else { this._nameEl.style.display = 'none'; }
+            } else { this._nameEl.style.display = 'none'; }
+        }
+
+        // ── SOUNDS: villager hum / hmm ──
+        this._soundTimer -= dt;
+        if(this._soundTimer <= 0 && distToPlayer < 10 && window._audioCtx) {
+            this._soundTimer = 6 + Math.random() * 12;
+            let ctx = window._audioCtx, t = ctx.currentTime;
+            // Classic villager "hmm" — two-tone hum
+            const freqs = [[220,0],[196,0.12],[220,0.24]];
+            freqs.forEach(([freq, delay]) => {
+                let o = ctx.createOscillator(), g = ctx.createGain();
+                o.type = 'sine'; o.frequency.setValueAtTime(freq, t+delay);
+                o.frequency.linearRampToValueAtTime(freq*0.95, t+delay+0.1);
+                g.gain.setValueAtTime(0.0, t+delay);
+                g.gain.linearRampToValueAtTime(0.055, t+delay+0.03);
+                g.gain.linearRampToValueAtTime(0.0, t+delay+0.13);
+                o.connect(g); g.connect(ctx.destination);
+                o.start(t+delay); o.stop(t+delay+0.15);
+            });
+        }
+
+        // Despawn if way too far
+        if(distToPlayer > 80) {
+            this.dead = true;
+            scene.remove(this.mesh);
+            if(this._nameEl) this._nameEl.remove();
+        }
+    }
+
+    remove() {
+        this.dead = true;
+        scene.remove(this.mesh);
+        if(this._nameEl) this._nameEl.remove();
+    }
+}
+
+function updateVillagers(dt) {
+    for(let i=villagers.length-1; i>=0; i--) {
+        if(villagers[i].dead) {
+            villagers.splice(i, 1);
+        } else {
+            villagers[i].update(dt);
+        }
+    }
+}
+
+// Spawn villagers near a village center (called when village chunks load)
+function spawnVillagersAt(vx, vy, vz) {
+    const professions = ['farmer','librarian','blacksmith','butcher','priest'];
+    const count = 3 + Math.floor(Math.random() * 4); // 3-6 villagers
+    for(let i=0; i<count; i++) {
+        let ox = (Math.random()-0.5)*12;
+        let oz = (Math.random()-0.5)*12;
+        let prof = professions[i % professions.length];
+        villagers.push(new Villager(vx+ox, vy+1, vz+oz, prof));
+    }
+}
+
 function spawnMobParticles(x, y, z) {
   // Simple CSS particles
   for(let i=0; i<5; i++) {
@@ -2019,13 +2451,14 @@ function updateMobs(dt) {
         for(let y=CH-1; y>0; y--) {
             let blk = world.getBlock(Math.floor(sx), y, Math.floor(sz));
             if(blk === GRASS || blk === DIRT || blk === SAND) {
-                // Never spawn if the surface block or any block above is water
+                // Never spawn on water-adjacent terrain
                 let above1 = world.getBlock(Math.floor(sx), y+1, Math.floor(sz));
                 let above2 = world.getBlock(Math.floor(sx), y+2, Math.floor(sz));
-                if(above1 === WATER || above2 === WATER) break; // skip this column
-                if(above1 !== AIR || above2 !== AIR) break; // needs clear space
+                if(above1 === WATER || above2 === WATER) break;
+                if(above1 !== AIR || above2 !== AIR) break;
                 let types;
                 if(isNight) {
+                    // Mostly hostile at night
                     let r = Math.random();
                     if(r < 0.5) types = ['zombie'];
                     else if(r < 0.75) types = ['skeleton'];
@@ -2038,7 +2471,7 @@ function updateMobs(dt) {
                 mobs.push(new Mob(t, sx, y+1.5, sz));
                 break;
             }
-            // If we hit water before land, abort — no mobs spawning in/on water
+            // Abort if we hit water before land
             if(blk === WATER) break;
         }
     }
@@ -2047,14 +2480,14 @@ function updateMobs(dt) {
             if(mobs[i].hbarEl) mobs[i].hbarEl.remove();
             mobs.splice(i, 1); 
         } else {
-            // Despawn any mob that ends up in water (shouldn't happen, but safety net)
-            let mx = Math.floor(mobs[i].mesh.position.x);
-            let my = Math.floor(mobs[i].mesh.position.y);
-            let mz = Math.floor(mobs[i].mesh.position.z);
-            if(world.getBlock(mx, my, mz) === WATER || world.getBlock(mx, my+1, mz) === WATER) {
+            // Safety: despawn mobs that ended up in water
+            let mx2 = Math.floor(mobs[i].mesh.position.x);
+            let my2 = Math.floor(mobs[i].mesh.position.y);
+            let mz2 = Math.floor(mobs[i].mesh.position.z);
+            if(world && (world.getBlock(mx2,my2,mz2)===WATER || world.getBlock(mx2,my2+1,mz2)===WATER)) {
                 scene.remove(mobs[i].mesh);
                 if(mobs[i].hbarEl) mobs[i].hbarEl.remove();
-                mobs.splice(i, 1);
+                mobs.splice(i,1);
                 continue;
             }
             mobs[i].update(dt);
@@ -2118,7 +2551,6 @@ function updatePlayer(dt){
   const len=Math.sqrt(mx*mx+mz*mz);
   let isSprinting = (KEYS['KeyW']||KEYS['ArrowUp']) && !KEYS['ShiftLeft'] && onGround && !inWater && hunger > 6;
   let speed = inWater ? 2.2 : isSneaking ? 1.5 : isSprinting ? 6.5 : 4.5;
-  if(window._boatSpeedBoost && inWater) speed = 7.5; // Boat is faster on water
   if(len>0){mx=mx/len*speed;mz=mz/len*speed;} vx=mx;vz=mz;
 
   if (inWater) {
@@ -2200,24 +2632,28 @@ function updatePlayer(dt){
 }
 
 function takeDamage(amt) {
-  if(amt <= 0) return;
-  // Armor reduces damage
+  if(!amt || amt <= 0) return;
+  // Armor damage reduction (capped at 60% — damage always registers)
   let armorPoints = 0;
   for(let i=0;i<36;i++){
-    if(inventory[i].id===I_HELMET) armorPoints+=2;
-    if(inventory[i].id===I_CHEST) armorPoints+=6;
-    if(inventory[i].id===I_LEGS) armorPoints+=5;
-    if(inventory[i].id===I_BOOTS) armorPoints+=2;
+    if(inventory[i] && inventory[i].id===I_HELMET) armorPoints+=2;
+    if(inventory[i] && inventory[i].id===I_CHEST)  armorPoints+=6;
+    if(inventory[i] && inventory[i].id===I_LEGS)   armorPoints+=5;
+    if(inventory[i] && inventory[i].id===I_BOOTS)  armorPoints+=2;
   }
-  let reduction = Math.min(0.8, armorPoints / 20);
-  amt = Math.max(1, Math.round(amt * (1 - reduction)));
-  hp -= amt;
-  document.getElementById('damageOverlay').style.opacity = 0.65;
-  setTimeout(() => document.getElementById('damageOverlay').style.opacity = 0, 250);
-  // Camera shake
-  window._shakeTime = 0.25; window._shakeMag = Math.min(0.04, amt * 0.008);
-  renderHearts(); checkAchievements();
-  if(hp <= 0) { if(window._playDeathSound) window._playDeathSound(); showDeathScreen(); }
+  let reduction = Math.min(0.60, armorPoints / 20);
+  amt = Math.max(1, Math.floor(amt * (1 - reduction)));
+  hp = Math.max(0, hp - amt);
+  let overlay = document.getElementById('damageOverlay');
+  if(overlay) { overlay.style.opacity = 0.75; setTimeout(()=>{ overlay.style.opacity=0; }, 300); }
+  window._shakeTime = 0.3; window._shakeMag = Math.min(0.06, amt * 0.012);
+  if(window._playHurtSound) { try { window._playHurtSound(); } catch(e){} }
+  renderHearts();
+  checkAchievements();
+  if(hp <= 0) {
+    if(window._playDeathSound) { try { window._playDeathSound(); } catch(e){} }
+    showDeathScreen();
+  }
 }
 
 function showDeathScreen() {
@@ -2484,7 +2920,7 @@ function updateWaterEffects(dt, headInWater) {
     renderBubbles(bubsLeft);
     if(bubblesEl) bubblesEl.style.display = 'flex';
     // Drown damage
-    if(_drowningTimer > 15) { // 15s = all bubbles gone
+    if(_drowningTimer > 10) { // 15s = all bubbles gone
       let drowningDmg = Math.floor((_drowningTimer - 15) / 1) * 1;
       let _prevDmg = Math.floor((_drowningTimer - 15 - dt) / 1) * 1;
       if(drowningDmg > _prevDmg) takeDamage(1);
@@ -2650,7 +3086,6 @@ function getCorrectDrop(blockId, toolId) {
     if(blockId === GRASS) return DIRT;
     if(blockId === LEAVES) return toolId === SHEARS ? LEAVES : AIR;
     if(blockId === GLASS) return AIR;
-    if(blockId === CAMPFIRE_BLOCK) return CAMPFIRE;
     return blockId;
 }
 
@@ -2892,112 +3327,14 @@ function setupInput(){
 
     if(e.button===2) {
       rightMouseHeld = true;
-      let slotData = inventory[selectedSlot];
       if(hit && hit.block === CRAFT_TABLE) { toggleUI(true, true); rightMouseHeld = false; return; }
       if(hit && hit.block === BED) {
         if(gameTime > 0.55 && gameTime < 0.95) { gameTime = 0.05; updateDayNight(0); }
         rightMouseHeld = false; return;
       }
-      // ── BOAT: right-click on water to ride ──
-      // Need a water-inclusive raycast since normal raycast skips water
-      let waterHit = null;
-      if(slotData.id === BOAT || slotData.id === FISHING_ROD) {
-        let ld2 = lookDir();
-        let ox2=px, oy2=py+PH*.88, oz2=pz;
-        let x2=Math.floor(ox2),y2=Math.floor(oy2),z2=Math.floor(oz2);
-        const sx2=ld2.x>=0?1:-1,sy2=ld2.y>=0?1:-1,sz2=ld2.z>=0?1:-1;
-        const adx2=Math.abs(ld2.x)||1e-9,ady2=Math.abs(ld2.y)||1e-9,adz2=Math.abs(ld2.z)||1e-9;
-        let tmx2=(ld2.x>=0?x2+1-ox2:ox2-x2)/adx2, tmy2=(ld2.y>=0?y2+1-oy2:oy2-y2)/ady2, tmz2=(ld2.z>=0?z2+1-oz2:oz2-z2)/adz2;
-        let t2=0;
-        for(let i=0;i<256&&t2<=5;i++){
-          let b2=world.getBlock(x2,y2,z2);
-          if(b2===WATER){waterHit={hx:x2,hy:y2,hz:z2};break;}
-          if(b2!==AIR) break;
-          if(tmx2<tmy2&&tmx2<tmz2){t2=tmx2;tmx2+=1/adx2;x2+=sx2;}else if(tmy2<tmz2){t2=tmy2;tmy2+=1/ady2;y2+=sy2;}else{t2=tmz2;tmz2+=1/adz2;z2+=sz2;}
-        }
-      }
-      if(waterHit && slotData.id === BOAT && slotData.count > 0) {
-        if(!window._boatRiding) {
-          window._boatRiding = true;
-          window._boatPaddleTimer = 0;
-          // Teleport player to water surface
-          px = waterHit.hx + 0.5; pz = waterHit.hz + 0.5;
-          py = waterHit.hy + 1.1;
-          vy = 0;
-          slotData.count--; if(slotData.count<=0) slotData.id=AIR; buildHotbar();
-          // ── ENTRY SPLASH SOUND ──
-          if(window._audioCtx) {
-            let ctx = window._audioCtx;
-            // Big splash: loud noise burst + deep thud
-            let bufLen = ctx.sampleRate * 0.35;
-            let buf = ctx.createBuffer(1, bufLen, ctx.sampleRate);
-            let d = buf.getChannelData(0);
-            for(let i = 0; i < bufLen; i++) {
-              let t3 = i / bufLen;
-              let env = Math.pow(1 - t3, 1.8) * (t3 < 0.02 ? t3/0.02 : 1);
-              d[i] = (Math.random() * 2 - 1) * 0.55 * env;
-            }
-            let src = ctx.createBufferSource();
-            let filter = ctx.createBiquadFilter();
-            filter.type = 'lowpass'; filter.frequency.value = 1200;
-            let gain = ctx.createGain();
-            src.buffer = buf;
-            src.connect(filter); filter.connect(gain); gain.connect(ctx.destination);
-            gain.gain.setValueAtTime(0.9, ctx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
-            src.start();
-            // Deep wooden thud
-            let o = ctx.createOscillator(), g = ctx.createGain();
-            o.connect(g); g.connect(ctx.destination);
-            o.type = 'sine';
-            o.frequency.setValueAtTime(180, ctx.currentTime);
-            o.frequency.exponentialRampToValueAtTime(55, ctx.currentTime + 0.25);
-            g.gain.setValueAtTime(0.18, ctx.currentTime);
-            g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.28);
-            o.start(); o.stop(ctx.currentTime + 0.28);
-          }
-          // Show boat UI hint
-          let el=document.createElement('div');
-          el.id='boatHint';
-          el.style.cssText='position:fixed;left:50%;bottom:160px;transform:translateX(-50%);color:#aaddff;font-family:"Press Start 2P",monospace;font-size:8px;text-shadow:1px 1px 0 #000;pointer-events:none;z-index:300;background:rgba(0,0,0,0.6);padding:4px 10px;';
-          el.textContent='🚣 Riding Boat — Press SHIFT to exit'; document.body.appendChild(el);
-          showAchievement('Smooth Sailing! Riding a boat');
-        }
-        rightMouseHeld=false; return;
-      }
-      // ── EXIT BOAT: press shift while riding ──
-      if(window._boatRiding && KEYS['ShiftLeft']) {
-        window._boatRiding = false;
-        let hint = document.getElementById('boatHint'); if(hint) hint.remove();
-        addToInventory(BOAT, 1); buildHotbar();
-        rightMouseHeld=false; return;
-      }
-      // ── FISHING ROD: right-click on water ──
-      if(waterHit && slotData.id === FISHING_ROD && slotData.count > 0) {
-        if(!window._fishingTimer) {
-          window._fishingTimer = 3 + Math.random()*4;
-          window._fishingHint = document.createElement('div');
-          window._fishingHint.style.cssText='position:fixed;left:50%;bottom:160px;transform:translateX(-50%);color:#aaddff;font-family:"Press Start 2P",monospace;font-size:8px;text-shadow:1px 1px 0 #000;pointer-events:none;z-index:300;background:rgba(0,0,0,0.6);padding:4px 10px;';
-          window._fishingHint.textContent='🎣 Fishing... wait for a bite!';
-          document.body.appendChild(window._fishingHint);
-        }
-        rightMouseHeld=false; return;
-      }
-      // ── CAMPFIRE: place it ──
-      if(hit && slotData.id === CAMPFIRE && slotData.count > 0) {
-        world.setBlock(hit.px, hit.py, hit.pz, CAMPFIRE_BLOCK);
-        slotData.count--; if(slotData.count<=0) slotData.id=AIR; buildHotbar();
-        // Add warm light from campfire
-        if(!window._campfireLights) window._campfireLights = [];
-        let cfl = new THREE.PointLight(0xff6600, 2.5, 14);
-        cfl.position.set(hit.px+0.5, hit.py+1.2, hit.pz+0.5);
-        scene.add(cfl);
-        window._campfireLights.push({light: cfl, x: hit.px, y: hit.py, z: hit.pz});
-        showAchievement('Campfire! Cozy warmth in the dark');
-        rightMouseHeld=false; return;
-      }
-      if([RAW_BEEF, MUTTON, CHICKEN_MEAT, ROTTEN_FLESH, RAW_FISH].includes(slotData.id)) {
-        let hungerRestore = slotData.id===RAW_BEEF?3 : slotData.id===MUTTON?2 : slotData.id===CHICKEN_MEAT?2 : slotData.id===RAW_FISH?2 : 4;
+      let slotData = inventory[selectedSlot];
+      if([RAW_BEEF, MUTTON, CHICKEN_MEAT, ROTTEN_FLESH].includes(slotData.id)) {
+        let hungerRestore = slotData.id===RAW_BEEF?3 : slotData.id===MUTTON?2 : slotData.id===CHICKEN_MEAT?2 : 4;
         if(hunger < 20) {
           hunger = Math.min(20, hunger + hungerRestore);
           if(slotData.id===ROTTEN_FLESH && Math.random()<0.8) takeDamage(1); // poison chance
@@ -3024,7 +3361,6 @@ function setupInput(){
         const h2=PW/2+.01, inPlayer=(hit.px<px+h2&&hit.px+1>px-h2&&hit.py<py+PH&&hit.py+1>py&&hit.pz<pz+h2&&hit.pz+1>pz-h2);
         if(!inPlayer || !isSolid(slotData.id)) {
           world.setBlock(hit.px,hit.py,hit.pz,slotData.id);
-          // ── TORCH LIGHT: spawn point light when torch is placed ──
           if(slotData.id === TORCH) {
             if(!window._torchLights) window._torchLights = [];
             let tl = new THREE.PointLight(0xffaa44, 1.4, 9);
@@ -3110,6 +3446,8 @@ function startGame(){
   renderer.shadowMap.enabled=true; renderer.shadowMap.type=THREE.PCFSoftShadowMap;
 
   scene=new THREE.Scene(); scene.background=new THREE.Color(0x8cb6ff); scene.fog=new THREE.Fog(0x8cb6ff, 30, RENDER_DIST*16 - 10);
+  window.scene = scene;
+  window._torchLights = [];
   camera=new THREE.PerspectiveCamera(75,innerWidth/innerHeight,.05,200); camera.rotation.order='YXZ';
   window._targetFov = 75;
 
@@ -3207,6 +3545,283 @@ function startGame(){
   }
   py=spawnY; highestY=py; vy=0; onGround=false;
 
+  // ── SPAWN BEAUTIFUL VILLAGE ON DRY FOREST LAND NEAR PLAYER ──
+  {
+    // ── STEP 1: Find a valid dry forest spot within 15-40 blocks of spawn ──
+    let vSpawnX = null, vSpawnZ = null, vGroundY = null;
+
+    const isGoodVillageSite = (wx, wz) => {
+      // Check terrain type — must be forest above sea level
+      let {h, type, isRiver} = getTerrain(wx, wz);
+      if(type !== 'forest' || isRiver || h <= SEA + 2) return false;
+      // Check a 12-block radius: no water blocks on surface
+      for(let dx=-12; dx<=12; dx+=3) {
+        for(let dz=-12; dz<=12; dz+=3) {
+          let nb = world.getBlock(Math.floor(wx+dx), h, Math.floor(wz+dz));
+          let nb2 = world.getBlock(Math.floor(wx+dx), h-1, Math.floor(wz+dz));
+          if(nb === WATER || nb2 === WATER) return false;
+          // Also check above for water
+          for(let dy=0; dy<=3; dy++) {
+            if(world.getBlock(Math.floor(wx+dx), h+dy, Math.floor(wz+dz)) === WATER) return false;
+          }
+        }
+      }
+      return true;
+    };
+
+    // Spiral search: try rings of increasing radius
+    outerSearch:
+    for(let ring=3; ring<=25; ring+=2) {
+      // Check multiple angles at this ring
+      for(let angle=0; angle<Math.PI*2; angle+=Math.PI/6) {
+        let tx = Math.round(px + Math.cos(angle)*ring*2);
+        let tz = Math.round(pz + Math.sin(angle)*ring*2);
+        if(isGoodVillageSite(tx, tz)) {
+          // Find actual top ground block here
+          let {h} = getTerrain(tx, tz);
+          vSpawnX = tx; vSpawnZ = tz; vGroundY = h - 1;
+          break outerSearch;
+        }
+      }
+    }
+
+    if(vSpawnX === null) {
+      // Fallback: use player spawn + 30 north even if not perfect
+      vSpawnX = Math.floor(px); vSpawnZ = Math.floor(pz) - 30;
+      vGroundY = spawnY;
+    }
+
+    // ── STEP 2: Flatten the village footprint ──
+    // Level all blocks in 22-block radius to vGroundY (fill holes, remove bumps)
+    for(let dx=-22; dx<=22; dx++) for(let dz=-22; dz<=22; dz++) {
+      if(dx*dx+dz*dz > 22*22) continue;
+      let wx2 = vSpawnX+dx, wz2 = vSpawnZ+dz;
+      // Clear everything above ground level
+      for(let dy=1; dy<=8; dy++) world.setBlock(wx2, vGroundY+dy, wz2, AIR);
+      // Make sure surface is solid grass
+      let surf = world.getBlock(wx2, vGroundY, wz2);
+      if(surf === AIR || surf === WATER) world.setBlock(wx2, vGroundY, wz2, GRASS);
+    }
+
+    // ── STEP 3: GRAVEL PATHS (more Minecraft-accurate than dirt) ──
+    const setPath = (wx,wy,wz) => {
+      world.setBlock(wx,wy,wz,GRAVEL);
+      world.setBlock(wx,wy+1,wz,AIR);
+    };
+    // Main cross paths — 2 blocks wide
+    for(let d=-22; d<=22; d++) {
+      for(let w=-1; w<=1; w++) {
+        setPath(vSpawnX+d, vGroundY, vSpawnZ+w);
+        setPath(vSpawnX+w, vGroundY, vSpawnZ+d);
+      }
+    }
+
+    // ── STEP 4: BEAUTIFUL WELL (cobblestone + wood + water) ──
+    const wx=vSpawnX, wz2=vSpawnZ, wy=vGroundY;
+    // Base ring: 3×3 cobblestone with water inside
+    for(let dx=-1;dx<=1;dx++) for(let dz=-1;dz<=1;dz++) {
+      if(dx===0&&dz===0) {
+        world.setBlock(wx+dx,wy,  wz2+dz,COBBLESTONE);
+        world.setBlock(wx+dx,wy+1,wz2+dz,WATER);
+      } else {
+        world.setBlock(wx+dx,wy,  wz2+dz,COBBLESTONE);
+        world.setBlock(wx+dx,wy+1,wz2+dz,COBBLESTONE);
+        world.setBlock(wx+dx,wy+2,wz2+dz,COBBLESTONE);
+      }
+    }
+    // Tall corner pillars
+    for(let dy=1;dy<=4;dy++) {
+      world.setBlock(wx-1,wy+dy,wz2-1,COBBLESTONE);
+      world.setBlock(wx+1,wy+dy,wz2-1,COBBLESTONE);
+      world.setBlock(wx-1,wy+dy,wz2+1,COBBLESTONE);
+      world.setBlock(wx+1,wy+dy,wz2+1,COBBLESTONE);
+    }
+    // Wooden crossbeam roof
+    for(let dx=-1;dx<=1;dx++) {
+      world.setBlock(wx+dx,wy+5,wz2,WOOD);
+      world.setBlock(wx,wy+5,wz2+dx,WOOD);
+    }
+    // Plank overhang
+    for(let dx=-2;dx<=2;dx++) for(let dz=-2;dz<=2;dz++)
+      world.setBlock(wx+dx,wy+4,wz2+dz,PLANKS);
+    // Central bucket hanging suggestion: torch on crossbeam
+    world.setBlock(wx,wy+5,wz2,TORCH);
+
+    // ── STEP 5: BEAUTIFUL HOUSES ──
+    // House builder: cobblestone base, planks walls, glass windows, wood roof with overhang
+    const buildHouse = (hx, hz, W, D, H, roofStyle) => {
+      const bx=vSpawnX+hx, bz=vSpawnZ+hz, by=vGroundY;
+      // Clear interior + above
+      for(let dx=-1;dx<=W;dx++) for(let dy=0;dy<=H+3;dy++) for(let dz=-1;dz<=D;dz++)
+        world.setBlock(bx+dx,by+dy,bz+dz,AIR);
+
+      // Foundation: cobblestone slab
+      for(let dx=0;dx<W;dx++) for(let dz=0;dz<D;dz++) {
+        world.setBlock(bx+dx,by-1,bz+dz,COBBLESTONE);
+        world.setBlock(bx+dx,by,  bz+dz,COBBLESTONE);
+      }
+
+      // Log pillars at 4 corners + mid-wall
+      const logPillars = [[0,0],[W-1,0],[0,D-1],[W-1,D-1]];
+      logPillars.forEach(([px2,pz2])=>{
+        for(let dy=1;dy<=H;dy++) world.setBlock(bx+px2,by+dy,bz+pz2,WOOD);
+      });
+
+      // Walls: planks between pillars, cobblestone bottom row
+      for(let dx=0;dx<W;dx++) for(let dz=0;dz<D;dz++) {
+        let isEdge = dx===0||dx===W-1||dz===0||dz===D-1;
+        if(!isEdge) continue;
+        let isCorner = (dx===0||dx===W-1)&&(dz===0||dz===D-1);
+        if(!isCorner) {
+          world.setBlock(bx+dx,by+1,bz+dz,COBBLESTONE); // base
+          for(let dy=2;dy<H;dy++) world.setBlock(bx+dx,by+dy,bz+dz,PLANKS);
+          world.setBlock(bx+dx,by+H,bz+dz,COBBLESTONE); // top trim
+        }
+      }
+
+      // Windows: glass on front+back, center of side walls
+      const midW=Math.floor(W/2), midD=Math.floor(D/2);
+      // Front windows
+      if(W>=5) {
+        world.setBlock(bx+1,by+2,bz,GLASS);
+        world.setBlock(bx+W-2,by+2,bz,GLASS);
+      } else {
+        world.setBlock(bx+midW,by+2,bz,GLASS);
+      }
+      // Back windows
+      world.setBlock(bx+midW,by+2,bz+D-1,GLASS);
+      // Side windows
+      if(D>=5) {
+        world.setBlock(bx,by+2,bz+2,GLASS);
+        world.setBlock(bx+W-1,by+2,bz+2,GLASS);
+      }
+
+      // Door: front center, 2 blocks tall cleared
+      let doorX = bx+midW, doorZ = bz;
+      world.setBlock(doorX,by+1,doorZ,DOOR);
+      world.setBlock(doorX,by+2,doorZ,AIR);
+      // Door flanking torches on outside
+      world.setBlock(doorX-1,by+2,doorZ-1,TORCH);
+      world.setBlock(doorX+1,by+2,doorZ-1,TORCH);
+
+      // Interior: craft table + bed + bookshelf make it feel lived-in
+      world.setBlock(bx+1,by+1,bz+D-2,CRAFT_TABLE);
+      world.setBlock(bx+W-2,by+1,bz+1,BED);
+      if(W>=5) world.setBlock(bx+2,by+1,bz+D-2,BOOKSHELF);
+      // Interior torch
+      world.setBlock(bx+1,by+2,bz+1,TORCH);
+      world.setBlock(bx+W-2,by+2,bz+D-2,TORCH);
+
+      // ── GABLED ROOF (like real Minecraft village houses) ──
+      if(roofStyle === 'gable') {
+        // Wide overhanging plank roof — gabled along Z axis
+        for(let peak=0; peak<=Math.floor(D/2)+1; peak++) {
+          let roofW = W + 2 - peak;
+          let roofStart = -1 + peak;
+          for(let dx=roofStart; dx<roofStart+roofW; dx++) {
+            // Both sides of gable
+            world.setBlock(bx+dx,by+H+peak,  bz+peak,  PLANKS);
+            world.setBlock(bx+dx,by+H+peak,  bz+D-1-peak, PLANKS);
+          }
+          if(peak===0) {
+            for(let dx=roofStart;dx<roofStart+roofW;dx++)
+              for(let dz=0;dz<D;dz++)
+                world.setBlock(bx+dx,by+H,bz+dz,PLANKS);
+          }
+        }
+        // Ridge
+        for(let dx=-1;dx<=W;dx++) world.setBlock(bx+dx,by+H+Math.floor(D/2)+1,bz+Math.floor(D/2),PLANKS);
+      } else {
+        // Flat overhang roof
+        for(let dx=-1;dx<=W;dx++) for(let dz=-1;dz<=D;dz++)
+          world.setBlock(bx+dx,by+H,bz+dz,PLANKS);
+        for(let dx=0;dx<W;dx++) for(let dz=0;dz<D;dz++)
+          world.setBlock(bx+dx,by+H+1,bz+dz,PLANKS);
+      }
+
+      // ── FENCE YARD around house ──
+      for(let dx=-2;dx<=W+1;dx++) {
+        world.setBlock(bx+dx,by+1,bz-2,FENCE);
+        world.setBlock(bx+dx,by+1,bz+D+1,FENCE);
+      }
+      for(let dz=-1;dz<=D;dz++) {
+        world.setBlock(bx-2,by+1,bz+dz,FENCE);
+        world.setBlock(bx+W+1,by+1,bz+dz,FENCE);
+      }
+      // Fence gate opening (front middle)
+      world.setBlock(bx+midW-1,by+1,bz-2,AIR);
+      world.setBlock(bx+midW,  by+1,bz-2,AIR);
+      // Flowers in yard corners
+      world.setBlock(bx-1,by+1,bz-1,ROSE);
+      world.setBlock(bx+W,by+1,bz-1,DANDELION);
+      world.setBlock(bx-1,by+1,bz+D,ROSE);
+      world.setBlock(bx+W,by+1,bz+D,DANDELION);
+    };
+
+    // Place 5 varied houses in a pleasant layout around the well
+    buildHouse(  8,  6, 7, 6, 4, 'gable');   // east house
+    buildHouse(-16,  6, 6, 6, 4, 'gable');   // west house
+    buildHouse(  8,-14, 6, 7, 4, 'gable');   // east-south house
+    buildHouse(-15,-14, 7, 6, 4, 'gable');   // west-south house
+    buildHouse(  0, 14, 8, 7, 5, 'gable');   // north big house (library/blacksmith)
+
+    // ── STEP 6: BEAUTIFUL LAMPPOSTS (oak log + planks cap + torch) ──
+    const lampPositions = [
+      [7,0],[-7,0],[0,7],[0,-7],
+      [14,7],[14,-7],[-14,7],[-14,-7],
+      [0,14],[0,-14]
+    ];
+    lampPositions.forEach(([ox,oz])=>{
+      let lx=vSpawnX+ox, lz=vSpawnZ+oz;
+      world.setBlock(lx,vGroundY+1,lz,FENCE);
+      world.setBlock(lx,vGroundY+2,lz,FENCE);
+      world.setBlock(lx,vGroundY+3,lz,FENCE);
+      world.setBlock(lx,vGroundY+4,lz,PLANKS);
+      world.setBlock(lx-1,vGroundY+4,lz,PLANKS);
+      world.setBlock(lx+1,vGroundY+4,lz,PLANKS);
+      world.setBlock(lx,vGroundY+4,lz-1,PLANKS);
+      world.setBlock(lx,vGroundY+4,lz+1,PLANKS);
+      world.setBlock(lx,vGroundY+5,lz,TORCH);
+      // Spawn lights
+      if(!window._torchLights) window._torchLights=[];
+      let tl=new THREE.PointLight(0xffaa44,1.6,12);
+      tl.position.set(lx+0.5,vGroundY+5.8,lz+0.5);
+      scene.add(tl);
+      window._torchLights.push({light:tl,x:lx,y:vGroundY+5,z:lz});
+    });
+
+    // ── STEP 7: DECORATIVE DETAILS ──
+    // Central village green: tall grass and flowers scattered
+    for(let dx=-5;dx<=5;dx++) for(let dz=-5;dz<=5;dz++) {
+      if(dx*dx+dz*dz<4) continue; // not right next to well
+      if(Math.abs(dx)<=1||Math.abs(dz)<=1) continue; // not on paths
+      let fx=vSpawnX+dx, fz=vSpawnZ+dz;
+      let r=Math.random();
+      if(r<0.12) world.setBlock(fx,vGroundY+1,fz,ROSE);
+      else if(r<0.22) world.setBlock(fx,vGroundY+1,fz,DANDELION);
+      else if(r<0.35) world.setBlock(fx,vGroundY+1,fz,TALL_GRASS);
+    }
+
+    // Small oak trees flanking the north/south road
+    const treeSpots=[[5,18],[-5,18],[5,-18],[-5,-18]];
+    treeSpots.forEach(([tx,tz])=>{
+      let tgx=vSpawnX+tx, tgz=vSpawnZ+tz;
+      for(let dy=1;dy<=5;dy++) world.setBlock(tgx,vGroundY+dy,tgz,WOOD);
+      for(let lx2=-2;lx2<=2;lx2++) for(let lz2=-2;lz2<=2;lz2++) {
+        if(Math.abs(lx2)===2&&Math.abs(lz2)===2) continue;
+        world.setBlock(tgx+lx2,vGroundY+4,tgz+lz2,LEAVES);
+        world.setBlock(tgx+lx2,vGroundY+5,tgz+lz2,LEAVES);
+      }
+      for(let lx2=-1;lx2<=1;lx2++) for(let lz2=-1;lz2<=1;lz2++)
+        world.setBlock(tgx+lx2,vGroundY+6,tgz+lz2,LEAVES);
+    });
+
+    // ── STEP 8: SPAWN VILLAGERS ──
+    if(!window._spawnedVillageKeys) window._spawnedVillageKeys=new Set();
+    window._spawnedVillageKeys.add('spawn_village');
+    spawnVillagersAt(vSpawnX, vGroundY, vSpawnZ);
+  }
+
   buildHotbar(); setupInput(); renderHearts(); renderHunger(); renderXpBar(); updateKillInfo();
 
   highlightMesh=new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(1.003,1.003,1.003)), new THREE.LineBasicMaterial({color:0x000000,linewidth:2,transparent:true,opacity:.5}));
@@ -3276,190 +3891,7 @@ function startGame(){
     requestAnimationFrame(loop);
     const now=performance.now(), dt=Math.min((now-prev)/1000,.05); prev=now;
 
-    updatePlayer(dt); updateDrops(dt); updateDayNight(dt); updateMobs(dt); updateHunger(dt); checkNightWarning();
-
-    // ── FISHING TIMER ──
-    if(window._fishingTimer > 0) {
-      window._fishingTimer -= dt;
-      if(window._fishingTimer <= 0) {
-        window._fishingTimer = 0;
-        if(window._fishingHint) { window._fishingHint.remove(); window._fishingHint = null; }
-        // Catch a fish!
-        addToInventory(RAW_FISH, 1); buildHotbar();
-        let el=document.createElement('div');
-        el.style.cssText='position:fixed;left:50%;bottom:160px;transform:translateX(-50%);color:#aaddff;font-family:"Press Start 2P",monospace;font-size:9px;text-shadow:1px 1px 0 #000;pointer-events:none;z-index:300;animation:floatUp 1s forwards;';
-        el.textContent='🐟 Got a fish!'; document.body.appendChild(el); setTimeout(()=>el.remove(),1000);
-        if(!_achievements.has('fisher')) { _achievements.add('fisher'); showAchievement('Gone Fishing! Caught a fish!'); }
-        // Splash sound
-        if(window._audioCtx){let ctx2=window._audioCtx;let buf=ctx2.createBuffer(1,ctx2.sampleRate*0.12,ctx2.sampleRate);let d=buf.getChannelData(0);for(let i=0;i<d.length;i++) d[i]=(Math.random()*2-1)*0.25*Math.pow(1-i/d.length,1.2);let s=ctx2.createBufferSource();s.buffer=buf;s.connect(ctx2.destination);s.start();}
-      }
-    }
-
-    // ── BOAT PHYSICS: ride on water surface ──
-    if(window._boatRiding) {
-      let bx=Math.floor(px), bz=Math.floor(pz);
-      let onWater = world && world.getBlock(bx, Math.floor(py-0.2), bz) === WATER;
-      if(onWater) {
-        // Lock to water surface height
-        let waterY = Math.floor(py-0.2) + 1.15;
-        py += (waterY - py) * Math.min(1, dt*8);
-        vy = 0;
-        window._boatSpeedBoost = true;
-
-        // ── BOAT PADDLE SOUND: splash rhythm while moving ──
-        let isMovingBoat = Math.abs(vx) > 0.5 || Math.abs(vz) > 0.5;
-        window._boatPaddleTimer = (window._boatPaddleTimer || 0) - dt;
-        if(isMovingBoat && window._boatPaddleTimer <= 0 && window._audioCtx) {
-          window._boatPaddleTimer = 0.55; // paddle every ~0.55s
-          let ctx = window._audioCtx;
-          // Water splash: white noise burst + low thud
-          let bufLen = ctx.sampleRate * 0.18;
-          let buf = ctx.createBuffer(1, bufLen, ctx.sampleRate);
-          let d = buf.getChannelData(0);
-          for(let i = 0; i < bufLen; i++) {
-            let t3 = i / bufLen;
-            // Splash envelope: sharp attack, quick decay
-            let env = Math.pow(1 - t3, 2.5) * (t3 < 0.05 ? t3/0.05 : 1);
-            d[i] = (Math.random() * 2 - 1) * 0.28 * env;
-          }
-          let src = ctx.createBufferSource();
-          let gain = ctx.createGain();
-          // Low-pass filter to make it sound like water not static
-          let filter = ctx.createBiquadFilter();
-          filter.type = 'lowpass';
-          filter.frequency.value = 900;
-          src.buffer = buf;
-          src.connect(filter); filter.connect(gain); gain.connect(ctx.destination);
-          gain.gain.setValueAtTime(0.5, ctx.currentTime);
-          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.18);
-          src.start();
-
-          // Wood creak: very short low tone
-          let o2 = ctx.createOscillator();
-          let g2 = ctx.createGain();
-          o2.connect(g2); g2.connect(ctx.destination);
-          o2.type = 'sine';
-          o2.frequency.setValueAtTime(120, ctx.currentTime);
-          o2.frequency.exponentialRampToValueAtTime(60, ctx.currentTime + 0.12);
-          g2.gain.setValueAtTime(0.07, ctx.currentTime);
-          g2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.14);
-          o2.start(); o2.stop(ctx.currentTime + 0.14);
-        }
-        if(!isMovingBoat) window._boatPaddleTimer = 0; // reset so next move starts immediately
-
-      } else {
-        window._boatRiding = false;
-        window._boatSpeedBoost = false;
-        addToInventory(BOAT, 1); buildHotbar();
-        let hint = document.getElementById('boatHint'); if(hint) hint.remove();
-        // Hide riding mesh
-        if(window._boatRideMesh) { window._boatRideMesh.visible = false; }
-      }
-      if(KEYS['ShiftLeft']) {
-        window._boatRiding = false;
-        window._boatSpeedBoost = false;
-        addToInventory(BOAT, 1); buildHotbar();
-        let hint = document.getElementById('boatHint'); if(hint) hint.remove();
-        if(window._boatRideMesh) { window._boatRideMesh.visible = false; }
-      }
-
-      // ── BOAT RIDE MESH: visible boat around player ──
-      if(window._boatRiding) {
-        if(!window._boatRideMesh) {
-          // Build a simple wooden boat: flat hull + two side walls + bow/stern
-          let boatGroup = new THREE.Group();
-          let plankMat = new THREE.MeshLambertMaterial({ color: 0x8a5c2e });
-          let darkMat  = new THREE.MeshLambertMaterial({ color: 0x5a3010 });
-
-          // Hull floor (flat plank base)
-          let hull = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.18, 0.85), plankMat);
-          hull.position.set(0, 0, 0);
-          boatGroup.add(hull);
-
-          // Left side wall
-          let leftWall = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.22, 0.08), darkMat);
-          leftWall.position.set(0, 0.18, -0.39);
-          boatGroup.add(leftWall);
-
-          // Right side wall
-          let rightWall = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.22, 0.08), darkMat);
-          rightWall.position.set(0, 0.18, 0.39);
-          boatGroup.add(rightWall);
-
-          // Bow (front)
-          let bow = new THREE.Mesh(new THREE.BoxGeometry(0.10, 0.32, 0.85), darkMat);
-          bow.position.set(0.78, 0.06, 0);
-          boatGroup.add(bow);
-
-          // Stern (back)
-          let stern = new THREE.Mesh(new THREE.BoxGeometry(0.10, 0.32, 0.85), darkMat);
-          stern.position.set(-0.78, 0.06, 0);
-          boatGroup.add(stern);
-
-          // Wood plank lines on hull
-          let stripMat = new THREE.MeshLambertMaterial({ color: 0x6a4020 });
-          for(let i=-1; i<=1; i++) {
-            let strip = new THREE.Mesh(new THREE.BoxGeometry(1.58, 0.02, 0.02), stripMat);
-            strip.position.set(0, 0.09, i * 0.25);
-            boatGroup.add(strip);
-          }
-
-          scene.add(boatGroup);
-          window._boatRideMesh = boatGroup;
-          window._boatRockTime = 0;
-        }
-
-        window._boatRideMesh.visible = true;
-        window._boatRockTime = (window._boatRockTime || 0) + dt;
-
-        // Snap to actual water surface Y
-        let waterSurfaceY = Math.floor(py - 0.5) + 1.0; // top of the water block
-
-        // Position boat centred on player, sitting ON TOP of water
-        let sinYaw = Math.sin(yaw), cosYaw = Math.cos(yaw);
-        let boatX = px;
-        let boatZ = pz;
-        let boatY = waterSurfaceY + 0.09; // hull half-height above surface
-
-        // Gentle water rocking
-        let rockRoll  = Math.sin(window._boatRockTime * 0.9) * 0.04;
-        let rockPitch = Math.sin(window._boatRockTime * 1.3 + 0.5) * 0.025;
-
-        window._boatRideMesh.position.set(boatX, boatY, boatZ);
-        window._boatRideMesh.rotation.set(rockPitch, -yaw, rockRoll);
-      }
-    } else {
-      window._boatSpeedBoost = false;
-      if(window._boatRideMesh) window._boatRideMesh.visible = false;
-    }
-
-    // ── PLACED BOATS: visible on water before boarding ──
-    if(!window._placedBoats) window._placedBoats = [];
-
-    // ── CAMPFIRE FLICKER ──
-    if(window._campfireLights) {
-      window._campfireLights.forEach(cf => {
-        cf.light.intensity = 2.2 + Math.sin(now*0.006)*0.4 + Math.sin(now*0.013)*0.2;
-        if(world && world.getBlock(cf.x, cf.y, cf.z) !== CAMPFIRE_BLOCK) {
-          scene.remove(cf.light); cf._dead = true;
-        }
-      });
-      window._campfireLights = window._campfireLights.filter(cf => !cf._dead);
-    }
-
-    // ── PLACED TORCH LIGHTS: flicker and cleanup ──
-    if(window._torchLights) {
-      window._torchLights.forEach(tl => {
-        // Flicker: fast subtle random shimmer
-        tl.light.intensity = 1.4 + Math.sin(now*0.011)*0.15 + (Math.random()-0.5)*0.08;
-        // Remove if torch was broken
-        if(world && world.getBlock(tl.x, tl.y, tl.z) !== TORCH) {
-          scene.remove(tl.light); tl._dead = true;
-        }
-      });
-      window._torchLights = window._torchLights.filter(tl => !tl._dead);
-    }
-
+    updatePlayer(dt); updateDrops(dt); updateDayNight(dt); updateMobs(dt); updateVillagers(dt); updateHunger(dt); checkNightWarning();
     // Water overlay + drowning
     let _headInWater2 = (world && world.getBlock(Math.floor(px), Math.floor(py+PH*0.8), Math.floor(pz)) === WATER);
     updateWaterEffects(dt, _headInWater2);
@@ -3520,22 +3952,44 @@ function startGame(){
         }
 
         camera.position.set(px+shakeX, py+PH*(window._cameraHeightMult||0.88)+shakeY + (window._bobOffset||0), pz);
-        // While in boat: raise camera slightly and tilt with rock for immersion
-        if(window._boatRiding && window._boatRideMesh) {
-          let rm = window._boatRideMesh;
-          let waterSurfY = Math.floor(py - 0.5) + 1.0;
-          camera.position.set(px+shakeX, waterSurfY + 0.72 + shakeY, pz);
-          camera.rotation.set(pitch, yaw, rm.rotation.z * 0.5);
-        } else {
-          camera.rotation.set(pitch, yaw, 0);
-        }
+        camera.rotation.y=yaw; camera.rotation.x=pitch; camera.rotation.z=0;
     }
     
     const ld=lookDir(); world.tick(px,pz,ld);
 
+    // ── VILLAGER SPAWNING: check if player is near a village ──
+    if(!window._spawnedVillageKeys) window._spawnedVillageKeys = new Set();
+    if(typeof getVillageCenter === 'function') {
+      const VCELL2 = 160;
+      let vcx3 = Math.floor(px/VCELL2), vcz3 = Math.floor(pz/VCELL2);
+      for(let dvx3=-1; dvx3<=1; dvx3++) for(let dvz3=-1; dvz3<=1; dvz3++) {
+        let v3 = getVillageCenter(vcx3+dvx3, vcz3+dvz3);
+        if(!v3) continue;
+        let vkey3 = v3.wx+','+v3.wz;
+        if(window._spawnedVillageKeys.has(vkey3)) continue;
+        let vdist = Math.hypot(px - v3.wx, pz - v3.wz);
+        if(vdist > 60) continue; // only spawn when reasonably close
+        // Check it's a valid forest biome village
+        let {h:vh3, type:vt3, isRiver:vr3} = getTerrain(v3.wx, v3.wz);
+        if(vt3==='ocean'||vt3==='desert'||vt3==='snow'||vr3||vh3<=SEA) continue;
+        window._spawnedVillageKeys.add(vkey3);
+        // Spawn villagers on surface
+        spawnVillagersAt(v3.wx, vh3, v3.wz);
+        showAchievement('Village! You found a village!');
+      }
+    }
+
     const hit=raycast(world,px,py+PH*.88,pz,ld.x,ld.y,ld.z,6);
     if(hit && !isFlora(hit.block)){ highlightMesh.visible=true; highlightMesh.position.set(hit.hx+.5,hit.hy+.5,hit.hz+.5); } else highlightMesh.visible=false;
     
+    // Torch light flicker + cleanup
+    if(window._torchLights) {
+      window._torchLights.forEach(tl => {
+        tl.light.intensity = 1.4 + Math.sin(now*0.011)*0.15 + (Math.random()-0.5)*0.08;
+        if(world && world.getBlock(tl.x, tl.y, tl.z) !== TORCH) { scene.remove(tl.light); tl._dead=true; }
+      });
+      window._torchLights = window._torchLights.filter(t=>!t._dead);
+    }
     updateMining(dt, hit); renderer.render(scene,camera); frames++;
     if(now-fpsT>500){ infoFPS.textContent='FPS: '+Math.round(frames/((now-fpsT)/1000)); frames=0; fpsT=now; }
     infoPos.textContent=`XYZ: ${px.toFixed(1)} ${py.toFixed(1)} ${pz.toFixed(1)}`;
@@ -3559,7 +4013,7 @@ for(let i=0;i<200;i++){
     document.getElementById('stars').appendChild(s);
 }
 
-const splashes = ["Also try Terraria!", "Now with less bugs!", "Creeper? Aww man.", "Blocky goodness!", "Infinite worlds!", "Watch out for spiders!", "Gone fishing!", "Sail the seas!", "Cozy campfire vibes!"];
+const splashes = ["Also try Terraria!", "Now with less bugs!", "Creeper? Aww man.", "Blocky goodness!", "Infinite worlds!", "Watch out for spiders!"];
 document.getElementById('splashText').innerText = splashes[Math.floor(Math.random() * splashes.length)];
 
 document.getElementById('playBtn').addEventListener('click',startGame);
