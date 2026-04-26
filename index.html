@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>💍 A Special Question...</title>
+    <title>💍 A Special Question... (v2.2 - Animated Sindoor)</title>
     <style>
         :root {
             --bg-pink: #ffe0ec;
@@ -19,7 +19,7 @@
             --gold-dark: #c49a3c;
             --gold-light: #fdf0c8;
             --diamond: #e8f4fd;
-            --diamond-sparkle: #ffffff;
+            --sindoor: #e63946;
             --white: #fff;
             --shadow: 0 8px 32px rgba(0, 0, 0, 0.13);
             --shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.18);
@@ -200,7 +200,6 @@
             border: 2px solid rgba(255, 255, 255, 0.08);
             overflow: visible;
         }
-        /* Velvet texture lines */
         .box-bottom::before {
             content: '';
             position: absolute;
@@ -216,7 +215,6 @@
             border-radius: 4px;
             pointer-events: none;
         }
-        /* Gold trim on box bottom */
         .box-bottom::after {
             content: '';
             position: absolute;
@@ -229,7 +227,7 @@
             pointer-events: none;
         }
 
-        /* Box lid – now properly covers the cushion and ring */
+        /* Box lid */
         .box-lid {
             position: absolute;
             bottom: 32%;
@@ -257,7 +255,6 @@
             transform: translateX(-50%) rotateX(-140deg);
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
         }
-        /* Lid gold trim */
         .box-lid::before {
             content: '';
             position: absolute;
@@ -270,7 +267,6 @@
             pointer-events: none;
             z-index: 1;
         }
-        /* Lid top decoration */
         .box-lid::after {
             content: '💝';
             position: absolute;
@@ -312,6 +308,7 @@
             justify-content: center;
             transition: all 0.5s ease;
         }
+
         /* Ring on cushion */
         .ring-container {
             position: relative;
@@ -598,7 +595,120 @@
             }
         }
 
-        /* Screen shake for celebration */
+        /* Sindoor Application Overlay */
+        .sindoor-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 300;
+            display: none;
+        }
+        .sindoor-overlay.active {
+            display: block;
+        }
+
+        .hand-emoji {
+            position: absolute;
+            top: 110%;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 4.5rem;
+            z-index: 2;
+            filter: drop-shadow(0 10px 20px rgba(0,0,0,0.3));
+            animation: applySindoor 2.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+
+        @keyframes applySindoor {
+            0% { top: 110%; transform: translateX(-50%) scale(0.5); opacity: 0; }
+            15% { top: 38%; transform: translateX(-50%) scale(1); opacity: 1; }
+            30% { top: 33%; transform: translateX(-45%) scale(1.1); }
+            45% { top: 33%; transform: translateX(-55%) scale(1.1); }
+            60% { top: 33%; transform: translateX(-50%) scale(1.2); }
+            75% { top: 33%; transform: translateX(-50%) scale(1); }
+            90% { top: 20%; transform: translateX(-50%) scale(0.5); opacity: 0.5; }
+            100% { top: -10%; transform: translateX(-50%) scale(0); opacity: 0; }
+        }
+
+        .sindoor-mark {
+            position: absolute;
+            top: 33%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100px;
+            height: 100px;
+            z-index: 1;
+            opacity: 0;
+        }
+        .sindoor-mark.active {
+            opacity: 1;
+        }
+        .sindoor-mark circle.draw {
+            stroke-dasharray: 251.32;
+            stroke-dashoffset: 251.32;
+            animation: drawSindoor 1s ease-out 0.6s forwards;
+        }
+        .sindoor-mark circle.fill {
+            fill: transparent;
+            animation: fillSindoor 0.5s ease-out 1.5s forwards;
+        }
+        @keyframes drawSindoor {
+            to { stroke-dashoffset: 0; }
+        }
+        @keyframes fillSindoor {
+            to { fill: #e63946; }
+        }
+
+        .sindoor-glow {
+            position: absolute;
+            top: 33%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 120px;
+            height: 120px;
+            background: radial-gradient(circle, rgba(230, 57, 70, 0.6) 0%, rgba(230, 57, 70, 0) 70%);
+            border-radius: 50%;
+            z-index: 0;
+            opacity: 0;
+            animation: glowPulse 1.5s ease-out 1.5s forwards;
+        }
+        @keyframes glowPulse {
+            0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+            50% { opacity: 1; transform: translate(-50%, -50%) scale(1.6); }
+            100% { opacity: 0.8; transform: translate(-50%, -50%) scale(1.2); }
+        }
+
+        .sindoor-text {
+            position: absolute;
+            top: 48%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #fff;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+            background: rgba(180, 0, 0, 0.8);
+            padding: 8px 24px;
+            border-radius: 20px;
+            z-index: 4;
+            opacity: 0;
+            animation: textGlow 1s ease-out 2s forwards;
+        }
+        @keyframes textGlow {
+            0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+            100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+        }
+
+        @media (max-width: 380px) {
+            .hand-emoji { font-size: 3.5rem; }
+            .sindoor-mark { width: 70px; height: 70px; }
+            .sindoor-glow { width: 90px; height: 90px; }
+            .sindoor-text { font-size: 1rem; padding: 6px 16px; }
+        }
+
+        /* Screen shake */
         .screen-shake {
             animation: screenShake 0.5s ease-out;
         }
@@ -665,6 +775,17 @@
     <!-- Celebration overlay -->
     <div class="celebration-overlay" id="celebrationOverlay"></div>
 
+    <!-- Sindoor Application Overlay -->
+    <div class="sindoor-overlay" id="sindoorOverlay">
+        <div class="hand-emoji">👆</div>
+        <svg class="sindoor-mark" viewBox="0 0 100 100">
+            <circle cx="50" cy="50" r="40" stroke="#e63946" stroke-width="6" fill="transparent" stroke-linecap="round" class="draw"/>
+            <circle cx="50" cy="50" r="40" fill="transparent" class="fill"/>
+        </svg>
+        <div class="sindoor-glow"></div>
+        <div class="sindoor-text">❤️ Sindoor Applied ❤️</div>
+    </div>
+
     <!-- Main -->
     <div class="main-container" id="mainContainer">
         <div class="title-text" id="titleText">💕 Tap the box to open it...</div>
@@ -709,6 +830,7 @@
             const resetBtn = document.getElementById('resetBtn');
             const mainContainer = document.getElementById('mainContainer');
             const celebrationOverlay = document.getElementById('celebrationOverlay');
+            const sindoorOverlay = document.getElementById('sindoorOverlay');
             const bgDecorations = document.getElementById('bgDecorations');
             const btnYes = document.getElementById('btnYes');
             const btnNo = document.getElementById('btnNo');
@@ -750,23 +872,19 @@
                 isAnimating = true;
                 boxOpened = true;
 
-                // Open lid
                 boxLid.classList.add('open');
                 tapHint.classList.add('hidden');
 
-                // Show ring after a short delay
                 setTimeout(function() {
                     ringContainer.classList.add('visible');
                 }, 350);
 
-                // Show buttons
                 setTimeout(function() {
                     buttonsArea.classList.add('visible');
                     titleText.textContent = '💍 Will you marry me?';
                     titleText.classList.add('opened');
                 }, 600);
 
-                // Spawn sparkles
                 setTimeout(function() {
                     const rect = boxArea.getBoundingClientRect();
                     const cx = rect.left + rect.width / 2;
@@ -788,38 +906,42 @@
                 answered = true;
                 isAnimating = true;
 
-                // Hide buttons
                 buttonsArea.classList.remove('visible');
 
-                // Show celebration message
-                setTimeout(function() {
-                    messageArea.textContent = '🎉 Yaaaaaaaayy!!! 🎉\nI am the happiest person ever! 💖';
+                // Animate Sindoor Application
+                sindoorOverlay.classList.add('active');
+                
+                const foreheadX = window.innerWidth / 2;
+                const foreheadY = window.innerHeight * 0.33;
+                
+                // Spawn particles during application
+                setTimeout(() => spawnSindoorSparkles(foreheadX, foreheadY, 10), 800);
+                setTimeout(() => spawnSindoorSparkles(foreheadX, foreheadY, 15), 1300);
+                setTimeout(() => spawnSindoorSparkles(foreheadX, foreheadY, 10), 1800);
+
+                // Show celebration message and rest of UI after sindoor animation
+                setTimeout(() => {
+                    messageArea.textContent = '🎉 Yaaaaaaaayy!!! 🎉\nI am the happiest person ever! 💖\nSindoor lag gaya!';
                     messageArea.className = 'message-area message-celebration visible';
-                }, 300);
-
-                // Screen shake
-                setTimeout(function() {
+                    
                     mainContainer.classList.add('screen-shake');
-                    setTimeout(function() { mainContainer.classList.remove('screen-shake'); }, 500);
-                }, 400);
+                    setTimeout(() => { mainContainer.classList.remove('screen-shake'); }, 500);
+                    
+                    const rect = boxArea.getBoundingClientRect();
+                    const cx = rect.left + rect.width / 2;
+                    const cy = rect.top + rect.height / 2;
+                    spawnConfettiRain(cx, cy, 60);
+                    spawnHeartBursts(cx, cy, 25);
+                    spawnBoxSparkles(cx, cy, 30);
+                    
+                    titleText.textContent = '💖 She said YES! 💖';
+                    titleText.classList.add('opened');
+                }, 2500);
 
-                // Massive celebration
-                const rect = boxArea.getBoundingClientRect();
-                const cx = rect.left + rect.width / 2;
-                const cy = rect.top + rect.height / 2;
-                spawnConfettiRain(cx, cy, 60);
-                spawnHeartBursts(cx, cy, 25);
-                spawnBoxSparkles(cx, cy, 30);
-
-                // Update title
-                titleText.textContent = '💖 She said YES! 💖';
-                titleText.classList.add('opened');
-
-                // Show reset
-                setTimeout(function() {
+                setTimeout(() => {
                     resetBtn.classList.add('visible');
                     isAnimating = false;
-                }, 800);
+                }, 3200);
             });
 
             // ────────────────────────────
@@ -831,27 +953,22 @@
                 answered = true;
                 isAnimating = true;
 
-                // Hide buttons
                 buttonsArea.classList.remove('visible');
 
-                // Show gentle sorry message
                 setTimeout(function() {
                     messageArea.textContent =
                         '😢 Ohhh... I am sorry...\nI will try my best to be a good match for you... 💔';
                     messageArea.className = 'message-area message-sorry visible';
                 }, 300);
 
-                // Gentle sparkles (subdued)
                 const rect = boxArea.getBoundingClientRect();
                 const cx = rect.left + rect.width / 2;
                 const cy = rect.top + rect.height / 2;
                 spawnBoxSparkles(cx, cy, 10);
 
-                // Update title
                 titleText.textContent = '💔 Maybe someday...';
                 titleText.classList.add('opened');
 
-                // Show reset
                 setTimeout(function() {
                     resetBtn.classList.add('visible');
                     isAnimating = false;
@@ -882,7 +999,10 @@
                 titleText.classList.remove('opened');
                 mainContainer.classList.remove('screen-shake');
 
-                // Clear celebration overlay
+                // Hide sindoor overlay
+                sindoorOverlay.classList.remove('active');
+                
+                // Clear all particles
                 celebrationOverlay.innerHTML = '';
             }
 
@@ -903,6 +1023,25 @@
                     s.style.setProperty('--hx2', (Math.random() - 0.5) * 280 + 'px');
                     s.style.setProperty('--hy2', (Math.random() - 0.8) * 240 + 'px');
                     s.style.animationDuration = (0.8 + Math.random() * 1.4) + 's';
+                    celebrationOverlay.appendChild(s);
+                    setTimeout(function() { s.remove(); }, 1500);
+                }
+            }
+
+            function spawnSindoorSparkles(x, y, count) {
+                const sindoorEmojis = ['❤️', '🧡', '💥', '✨', '🔴', '💖', '💕', '🌟'];
+                for (let i = 0; i < count; i++) {
+                    const s = document.createElement('span');
+                    s.className = 'heart-burst';
+                    s.textContent = sindoorEmojis[Math.floor(Math.random() * sindoorEmojis.length)];
+                    s.style.left = x + 'px';
+                    s.style.top = y + 'px';
+                    s.style.fontSize = (18 + Math.random() * 28) + 'px';
+                    s.style.setProperty('--hx', (Math.random() - 0.5) * 180 + 'px');
+                    s.style.setProperty('--hy', (Math.random() - 0.5) * 180 + 'px');
+                    s.style.setProperty('--hx2', (Math.random() - 0.5) * 250 + 'px');
+                    s.style.setProperty('--hy2', (Math.random() - 0.5) * 250 + 'px');
+                    s.style.animationDuration = (0.9 + Math.random() * 1.2) + 's';
                     celebrationOverlay.appendChild(s);
                     setTimeout(function() { s.remove(); }, 1500);
                 }
@@ -967,13 +1106,13 @@
                 tapHint.classList.remove('hidden');
                 titleText.textContent = '💕 Tap the box to open it...';
                 titleText.classList.remove('opened');
+                sindoorOverlay.classList.remove('active');
             }
 
             init();
 
             console.log('💍 Ring box ready! Tap the velvet box to open it.');
-            console.log('💖 The ring is hidden under the lid until you tap!');
-            console.log('💍 Will you say yes?');
+            console.log('❤️ When she says YES, watch the sindoor being applied!');
         })();
     </script>
 </body>
