@@ -2,20 +2,20 @@
   "name": "CARLRUN: OVERDRIVE",
   "short_name": "CARLRUN",
   "description": "Parkour · Shoot · Survive — a cyberpunk runner shooter",
-  "start_url": "/",
+  "start_url": "/RInguus/",
   "display": "fullscreen",
   "orientation": "landscape",
   "background_color": "#000000",
   "theme_color": "#00ffff",
   "icons": [
     {
-      "src": "/icon-192.png",
+      "src": "/RInguus/icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "/icon-512.png",
+      "src": "/RInguus/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
