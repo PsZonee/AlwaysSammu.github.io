@@ -3,8 +3,6 @@
   "target": {
     "namespace": "android_app",
     "package_name": "com.pszonee.carlrun",
-    "sha256_cert_fingerprints": [
-      "DE:B6:03:30:DD:14:C8:17:8E:7B:A5:EB:2B:3D:D5:5C:9D:68:AF:EB:F9:92:95:AA:5F:75:D8:96:0B:8A:5A:86"
-    ]
+    "sha256_cert_fingerprints": ["DA:1C:41:C3:BA:CC:45:A5:66:E6:5F:D0:09:AD:AC:5C:49:0A:D4:75:51:04:43:C4:9C:CF:44:50:D0:CA:F5:FE"]
   }
 }]
