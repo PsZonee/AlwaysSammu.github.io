@@ -3,6 +3,7 @@
   "short_name": "CARLRUN",
   "description": "Parkour · Shoot · Survive — a cyberpunk runner shooter",
   "start_url": "/RInguus/",
+  "scope": "/RInguus/",
   "display": "fullscreen",
   "orientation": "landscape",
   "background_color": "#000000",
